@@ -7,14 +7,17 @@ import MapKit
 
 struct ContentView: View {
 
+    @EnvironmentObject private var settings: AppSettings
+
     @StateObject private var location         = LocationManager()
     @StateObject private var weatherService   = WeatherService()
     @StateObject private var satelliteService = SatelliteService()
 
-    @State private var searchText  = ""
-    @State private var isSearching = false
-    @State private var searchError: String?
-    @State private var isGeocoding = false
+    @State private var searchText    = ""
+    @State private var isSearching   = false
+    @State private var searchError:  String?
+    @State private var isGeocoding   = false
+    @State private var showSettings  = false
 
     @State private var pinnedCoordinate: CLLocationCoordinate2D?
     @State private var pinnedPlaceName:  String = ""
@@ -103,16 +106,18 @@ struct ContentView: View {
                                 .padding(.horizontal, 24)
                         }
 
-                        SatelliteCard(
-                            image:       satelliteService.image,
-                            captureTime: satelliteService.captureTime,
-                            isLoading:   satelliteService.isLoading,
-                            coordinate:  activeCoordinate,
-                            timeZone:    activeTimeZone,
-                            placeName:   activePlaceName
-                        )
-                        .padding(.horizontal, 24)
-                        .padding(.top, 16)
+                        if settings.showSatelliteCard {
+                            SatelliteCard(
+                                image:       satelliteService.image,
+                                captureTime: satelliteService.captureTime,
+                                isLoading:   satelliteService.isLoading,
+                                coordinate:  activeCoordinate,
+                                timeZone:    activeTimeZone,
+                                placeName:   activePlaceName
+                            )
+                            .padding(.horizontal, 24)
+                            .padding(.top, 16)
+                        }
 
                         Spacer().frame(height: 48)
                     } else {
@@ -124,7 +129,13 @@ struct ContentView: View {
         }
         .onAppear {
             location.requestLocation()
-            satelliteService.start()
+            satelliteService.start(imageURL: settings.satelliteRegion.imageURL)
+        }
+        .onChange(of: settings.satelliteRegion) { _, region in
+            satelliteService.start(imageURL: region.imageURL)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsSheet().environmentObject(settings)
         }
         .onReceive(location.$coordinate) { coord in
             guard pinnedCoordinate == nil, let coord else { return }
@@ -152,7 +163,8 @@ struct ContentView: View {
             searchText:          $searchText,
             onSearch:            geocodeSearch,
             onClearPin:          clearPin,
-            onCancel:            { isSearching = false; searchError = nil }
+            onCancel:            { isSearching = false; searchError = nil },
+            onOpenSettings:      { showSettings = true }
         )
     }
 
@@ -242,4 +254,4 @@ extension Color {
     }
 }
 
-#Preview { ContentView() }
+#Preview { ContentView().environmentObject(AppSettings()) }

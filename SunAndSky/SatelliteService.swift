@@ -13,12 +13,12 @@ final class SatelliteService: ObservableObject {
     @Published private(set) var fetchError:  String?
 
     private var refreshTask: Task<Void, Never>?
-
-    // GOES-East CONUS GeoColor — public NESDIS/STAR endpoint, no auth required
-    private let imageURL = URL(string:
+    private var imageURL = URL(string:
         "https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/GEOCOLOR/latest.jpg")!
 
-    func start() {
+    /// Start (or restart) the fetch loop. Pass a URL to change the satellite region.
+    func start(imageURL: URL? = nil) {
+        if let url = imageURL { self.imageURL = url }
         refreshTask?.cancel()
         refreshTask = Task {
             while !Task.isCancelled {

@@ -3,6 +3,8 @@ import SwiftUI
 // MARK: - CurrentConditionsCard
 
 struct CurrentConditionsCard: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let weather:  WeatherData
     let solar:    SolarInfo?
     let timeZone: TimeZone?
@@ -15,7 +17,7 @@ struct CurrentConditionsCard: View {
                     Image(systemName: weather.sfSymbol)
                         .font(.system(size: 28))
                         .symbolRenderingMode(.multicolor)
-                    Text(weather.temperatureLabel)
+                    Text(settings.temperatureString(weather.temperature))
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(.white)
                     Text(weather.conditionLabel)
@@ -37,22 +39,24 @@ struct CurrentConditionsCard: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 14)
 
-            Divider().overlay(.white.opacity(0.25)).padding(.horizontal, 14)
+            if settings.showForecastStrip {
+                Divider().overlay(.white.opacity(0.25)).padding(.horizontal, 14)
 
-            // ── 24-hour forecast strip section header ─────────────────
-            HStack {
-                Text("24-Hour Forecast")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .textCase(.uppercase)
-                    .tracking(0.6)
-                Spacer()
+                // ── 24-hour forecast strip section header ─────────────────
+                HStack {
+                    Text("24-Hour Forecast")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .textCase(.uppercase)
+                        .tracking(0.6)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 6)
+
+                forecastStrip
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 6)
-
-            forecastStrip
 
             // ── Day summary ──────────────────────────────────────────
             Divider().overlay(.white.opacity(0.25)).padding(.horizontal, 14)
@@ -125,13 +129,8 @@ struct CurrentConditionsCard: View {
         else                            { conditionPhrase = "mostly clear skies" }
 
         if let sunset = solar?.sunset {
-            let h   = Calendar.current.component(.hour, from: sunset)
-            let fmt = DateFormatter()
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            fmt.dateFormat = "h:mm a"
-            fmt.amSymbol = "AM"; fmt.pmSymbol = "PM"
-            if let tz = timeZone { fmt.timeZone = tz }
-            let tf = fmt.string(from: sunset)
+            let h  = Calendar.current.component(.hour, from: sunset)
+            let tf = settings.timeString(sunset, timeZone: timeZone)
             if let snap = weather.hourlySnapshots.first(where: { $0.hour == h }) {
                 switch snap.lightQuality {
                 case .great: return "Expect \(conditionPhrase) with a stunning golden hour at \(tf)"
@@ -147,6 +146,7 @@ struct CurrentConditionsCard: View {
 // MARK: - ForecastCell
 
 private struct ForecastCell: View {
+    @EnvironmentObject private var settings: AppSettings
 
     enum LightWindow { case golden, blue }
 
@@ -197,7 +197,7 @@ private struct ForecastCell: View {
             .padding(.top, 4)
 
             // ── Temperature ───────────────────────────────────────────
-            Text(String(format: "%.0f°", snapshot.temperature))
+            Text(settings.temperatureString(snapshot.temperature))
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.white)
                 .padding(.top, 3)
@@ -233,6 +233,7 @@ private struct ForecastCell: View {
 
     private var timeLabel: String {
         let h = snapshot.hour
+        if settings.use24HourTime { return String(format: "%02d:00", h) }
         if h == 0  { return "12 AM" }
         if h < 12  { return "\(h) AM" }
         if h == 12 { return "12 PM" }

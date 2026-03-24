@@ -3,6 +3,8 @@ import SwiftUI
 // MARK: - SunriseSunsetCard
 
 struct SunriseSunsetCard: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let solar:    SolarInfo
     let weather:  WeatherData?
     let now:      Date
@@ -19,14 +21,14 @@ struct SunriseSunsetCard: View {
         HStack(spacing: 12) {
             SunHeroCard(
                 title:     "Sunrise",
-                time:      solar.sunrise.map { fmt($0) } ?? "—",
+                time:      solar.sunrise.map { settings.timeString($0, timeZone: timeZone) } ?? "—",
                 snapshot:  solar.sunrise.flatMap { weather?.snapshot(at: $0) },
                 isSunrise: true,
                 state:     cardStates.rise
             )
             SunHeroCard(
                 title:     "Sunset",
-                time:      solar.sunset.map { fmt($0) } ?? "—",
+                time:      solar.sunset.map { settings.timeString($0, timeZone: timeZone) } ?? "—",
                 snapshot:  solar.sunset.flatMap { weather?.snapshot(at: $0) },
                 isSunrise: false,
                 state:     cardStates.set
@@ -34,20 +36,13 @@ struct SunriseSunsetCard: View {
         }
         .padding(.horizontal, 24)
     }
-
-    private func fmt(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        f.amSymbol = "AM"; f.pmSymbol = "PM"
-        if let tz = timeZone { f.timeZone = tz }
-        return f.string(from: date)
-    }
 }
 
 // MARK: - SolarInfoGrid
 
 struct SolarInfoGrid: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let solar:    SolarInfo
     let timeZone: TimeZone?
 
@@ -55,18 +50,9 @@ struct SolarInfoGrid: View {
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 12) {
-            StatCard(title: "Solar Noon", value: solar.solarNoon.map { fmt($0) } ?? "—", icon: "sun.max.fill")
-            StatCard(title: "Day Length", value: dayLengthString(solar.dayLength),        icon: "clock.fill")
+            StatCard(title: "Solar Noon", value: solar.solarNoon.map { settings.timeString($0, timeZone: timeZone) } ?? "—", icon: "sun.max.fill")
+            StatCard(title: "Day Length", value: dayLengthString(solar.dayLength),                                           icon: "clock.fill")
         }
-    }
-
-    private func fmt(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        f.amSymbol = "AM"; f.pmSymbol = "PM"
-        if let tz = timeZone { f.timeZone = tz }
-        return f.string(from: date)
     }
 
     private func dayLengthString(_ seconds: TimeInterval) -> String {

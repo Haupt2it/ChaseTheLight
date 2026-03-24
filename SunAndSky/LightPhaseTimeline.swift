@@ -214,6 +214,8 @@ struct LightPhaseTimelineView: View {
 // MARK: - PhaseGridCell
 
 private struct PhaseGridCell: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let phase:    LightPhase
     let now:      Date
     let timeZone: TimeZone?
@@ -365,10 +367,6 @@ private struct PhaseGridCell: View {
     }
 
     private func fmt(_ d: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm"
-        if let tz = timeZone { f.timeZone = tz }
-        return f.string(from: d)
+        settings.timeString(d, timeZone: timeZone, showAmPm: false)
     }
 }

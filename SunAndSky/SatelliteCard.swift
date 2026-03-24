@@ -5,6 +5,8 @@ import CoreLocation
 // MARK: - SatelliteCard
 
 struct SatelliteCard: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let image:       UIImage?
     let captureTime: Date?
     let isLoading:   Bool
@@ -38,7 +40,7 @@ struct SatelliteCard: View {
                 if isLoading {
                     ProgressView().tint(.white).scaleEffect(0.75)
                 } else if let t = captureTime {
-                    Text(fmtTime(t, tz: timeZone))
+                    Text(settings.timeString(t, timeZone: timeZone))
                         .font(.system(size: 15)).foregroundStyle(.white.opacity(0.60))
                 }
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
@@ -90,15 +92,6 @@ struct SatelliteCard: View {
 
     // MARK: Helpers
 
-    private func fmtTime(_ date: Date, tz: TimeZone?) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        f.amSymbol = "AM"; f.pmSymbol = "PM"
-        if let tz { f.timeZone = tz }
-        return f.string(from: date)
-    }
-
     private var placeholderView: some View {
         Rectangle()
             .fill(Color(hex: 0x0A1628))
@@ -121,6 +114,8 @@ struct SatelliteCard: View {
 // MARK: - SatelliteFullScreen
 
 private struct SatelliteFullScreen: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let image:       UIImage?
     let captureTime: Date?
     let coordinate:  CLLocationCoordinate2D?
@@ -212,10 +207,11 @@ private struct SatelliteFullScreen: View {
     private func fmtCapture(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "MMM d, h:mm a"
-        f.amSymbol = "AM"; f.pmSymbol = "PM"
+        f.dateFormat = "MMM d"
         if let tz = timeZone { f.timeZone = tz }
-        return f.string(from: date)
+        let datePart = f.string(from: date)
+        let timePart = settings.timeString(date, timeZone: timeZone)
+        return "\(datePart), \(timePart)"
     }
 }
 

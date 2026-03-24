@@ -4,6 +4,8 @@ import CoreLocation
 // MARK: - SunArcHeroView
 
 struct SunArcHeroView: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let solar:      SolarInfo?
     let cloudCover: Double
     let now:        Date
@@ -21,7 +23,8 @@ struct SunArcHeroView: View {
                     solar:      solar,
                     now:        now,
                     latitude:   latitude,
-                    longitude:  longitude
+                    longitude:  longitude,
+                    use24Hour:  settings.use24HourTime
                 )
             } else {
                 // Pre-location placeholder: deep night sky
@@ -60,6 +63,8 @@ struct SunArcHeroView: View {
 // MARK: - LocationHeaderView
 
 struct LocationHeaderView: View {
+    @EnvironmentObject private var settings: AppSettings
+
     let solar:               SolarInfo?
     let now:                 Date
     let timeZone:            TimeZone?
@@ -69,9 +74,10 @@ struct LocationHeaderView: View {
     let searchError:         String?
     @Binding var isSearching: Bool
     @Binding var searchText:  String
-    let onSearch:   () -> Void
-    let onClearPin: () -> Void
-    let onCancel:   () -> Void
+    let onSearch:        () -> Void
+    let onClearPin:      () -> Void
+    let onCancel:        () -> Void
+    let onOpenSettings:  () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
@@ -103,9 +109,16 @@ struct LocationHeaderView: View {
                         .padding(8)
                         .background(.white.opacity(0.15), in: Circle())
                 }
+                Button { onOpenSettings() } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title3)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(8)
+                        .background(.white.opacity(0.15), in: Circle())
+                }
             }
 
-            Text(localTimeStr(now))
+            Text(settings.timeString(now, timeZone: timeZone))
                 .font(.system(size: 36, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
             Text(localDateStr(now))
@@ -177,15 +190,6 @@ struct LocationHeaderView: View {
 
     // MARK: Formatters
 
-    private func localTimeStr(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "h:mm a"
-        f.amSymbol = "AM"; f.pmSymbol = "PM"
-        if let tz = timeZone { f.timeZone = tz }
-        return f.string(from: date)
-    }
-
     private func localDateStr(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = Locale.current
@@ -209,6 +213,7 @@ private struct SunArcView: View {
     let now:        Date
     let latitude:   Double
     let longitude:  Double
+    let use24Hour:  Bool
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { tl in
@@ -470,7 +475,7 @@ private struct SunArcView: View {
     private func drawSunLabel(_ ctx: GraphicsContext, pos: CGPoint, size: CGSize) {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "en_US_POSIX")
-        fmt.dateFormat = "h:mm"
+        fmt.dateFormat = use24Hour ? "HH:mm" : "h:mm"
         let label   = fmt.string(from: now)
         let offsetX: CGFloat = pos.x > size.width - 70 ? -52 : 18
         ctx.drawLayer { lc in
@@ -518,6 +523,9 @@ private struct SunArcView: View {
 
     private func fmtTime(_ d: Date?) -> String {
         guard let d else { return "" }
-        return d.formatted(date: .omitted, time: .shortened)
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = use24Hour ? "HH:mm" : "h:mm"
+        return f.string(from: d)
     }
 }
