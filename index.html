@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chase the Light — Privacy Policy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0a0e1a;
+      color: #e8eaf0;
+      line-height: 1.7;
+      padding: 48px 24px 80px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding-bottom: 48px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 48px;
+    }
+
+    .app-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #1c3a6e, #f09018);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .tagline {
+      margin-top: 8px;
+      font-size: 15px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #f09018;
+      margin-bottom: 14px;
+    }
+
+    p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.80);
+      margin-bottom: 12px;
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    /* Callout box */
+    .callout {
+      background: rgba(240, 144, 24, 0.10);
+      border: 1px solid rgba(240, 144, 24, 0.28);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+
+    .callout p {
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 0;
+    }
+
+    .callout strong {
+      color: #f0a840;
+    }
+
+    /* List */
+    ul {
+      padding-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li {
+      font-size: 16px;
+      color: rgba(255,255,255,0.80);
+      margin-bottom: 6px;
+    }
+
+    /* Contact */
+    a {
+      color: #6ab0f5;
+      text-decoration: none;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 40px 0;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.28);
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div class="app-icon">🌅</div>
+      <h1>Chase the Light</h1>
+      <p class="tagline">Privacy Policy</p>
+    </header>
+
+    <section>
+      <h2>Overview</h2>
+      <p>
+        Chase the Light is a photography light-phase tracker built for iOS. This policy describes
+        what information the app accesses, how it is used, and what is never collected.
+      </p>
+      <p>
+        The short version: <strong style="color:#fff;">your data stays on your device.</strong>
+        Nothing you do in Chase the Light is collected, stored, or shared with anyone.
+      </p>
+    </section>
+
+    <section>
+      <h2>Location Data</h2>
+      <div class="callout">
+        <p>
+          <strong>Chase the Light uses your location only while the app is open.</strong>
+          Location is used solely to calculate sun position, light phase timings, and to display
+          your city name. It is never transmitted to any server, never stored in any database,
+          and never shared with third parties.
+        </p>
+      </div>
+      <p>
+        Specifically, your location is used to:
+      </p>
+      <ul>
+        <li>Calculate the current sun altitude and azimuth for your position</li>
+        <li>Compute sunrise, sunset, and all six light phase windows for today</li>
+        <li>Display the name of your city or region on screen</li>
+        <li>Position an indicator dot on the live satellite image</li>
+      </ul>
+      <p>
+        All of these calculations happen entirely on your device using Apple's CoreLocation
+        and standard solar geometry. Your coordinates are never sent anywhere.
+      </p>
+    </section>
+
+    <section>
+      <h2>Satellite Imagery</h2>
+      <p>
+        The app downloads live satellite images from NOAA's public GOES-East feed at
+        <code style="font-size:14px; color:rgba(255,255,255,0.55);">cdn.star.nesdis.noaa.gov</code>.
+        This is an unauthenticated public endpoint. No identifying information about you or
+        your device is sent as part of this request beyond what a standard HTTPS connection
+        includes (your IP address, managed by Apple's networking stack).
+      </p>
+    </section>
+
+    <section>
+      <h2>Data We Do Not Collect</h2>
+      <ul>
+        <li>No account or sign-in required</li>
+        <li>No analytics or usage tracking</li>
+        <li>No advertising or ad identifiers</li>
+        <li>No crash reporting services</li>
+        <li>No location history or logs</li>
+        <li>No data shared with third parties</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Children's Privacy</h2>
+      <p>
+        Chase the Light does not collect any personal information from anyone, including
+        children under 13. The app complies with the Children's Online Privacy Protection
+        Act (COPPA).
+      </p>
+    </section>
+
+    <section>
+      <h2>Changes to This Policy</h2>
+      <p>
+        If this privacy policy changes, the updated version will be posted at this URL.
+        The effective date at the bottom of this page will be updated accordingly.
+      </p>
+    </section>
+
+    <hr>
+
+    <section>
+      <h2>Contact</h2>
+      <p>
+        Questions about this privacy policy or the app? Reach out at:
+      </p>
+      <p>
+        <a href="https://github.com/Haupt2it">github.com/Haupt2it</a>
+      </p>
+    </section>
+
+    <footer>
+      <p>Chase the Light &nbsp;·&nbsp; Haupt2it &nbsp;·&nbsp; Effective March 24, 2026</p>
+    </footer>
+
+  </div>
+</body>
+</html>
