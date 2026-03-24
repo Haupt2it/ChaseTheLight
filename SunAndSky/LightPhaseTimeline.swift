@@ -311,18 +311,18 @@ private struct PhaseGridCell: View {
     private var statusBadge: some View {
         if isActive {
             Text("NOW")
-                .font(.system(size: 12, weight: .black))
+                .font(.system(size: 24, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 8).padding(.vertical, 3)
+                .padding(.horizontal, 12).padding(.vertical, 6)
                 .background(.white.opacity(0.25), in: Capsule())
                 .overlay(Capsule().strokeBorder(.white.opacity(0.80), lineWidth: 1))
         } else if let n = phase.nextWindow(after: now) {
             let secs = max(0, n.start.timeIntervalSince(now))
             let h = Int(secs) / 3600; let m = (Int(secs) % 3600) / 60
             Text(h > 0 ? "\(h)h \(m)m" : "\(m)m")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 7).padding(.vertical, 3)
+                .padding(.horizontal, 12).padding(.vertical, 6)
                 .background(.white.opacity(0.18), in: Capsule())
         } else {
             Image(systemName: "checkmark")

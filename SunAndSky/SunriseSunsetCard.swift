@@ -101,9 +101,8 @@ private struct SunHeroCard: View {
             // ── Line 1: Label + badge ─────────────────────────────────
             HStack(alignment: .center, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white.opacity(state == .done ? 0.36 : 0.72))
-                    .tracking(0.4)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white.opacity(state == .done ? 0.36 : 0.90))
                 Spacer(minLength: 4)
                 badgeView
             }
