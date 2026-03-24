@@ -400,6 +400,8 @@
 				DEVELOPMENT_TEAM = 32QFTK45L9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Chase the Light";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Chase the Light uses your location to calculate the sun position and sky conditions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,6 +434,8 @@
 				DEVELOPMENT_TEAM = 32QFTK45L9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Chase the Light";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Chase the Light uses your location to calculate the sun position and sky conditions.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
