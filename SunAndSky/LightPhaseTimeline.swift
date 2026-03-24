@@ -66,24 +66,34 @@ struct LightPhase: Identifiable {
         }
     }
 
-    var accentColors: [Color] {
+    /// Solid background color for the phase card — sky gradient peeks through at boxOpacity.
+    var boxBackground: Color {
         switch kind {
-        case .astronomicalTwilight: return [Color(hex: 0x0A1530), Color(hex: 0x203860)]
-        case .nauticalTwilight:     return [Color(hex: 0x1C0E62), Color(hex: 0x3C2898)]
-        case .blueHour:             return [Color(hex: 0x0E3090), Color(hex: 0x1E64D8)]
-        case .goldenHour:           return [Color(hex: 0xA05800), Color(hex: 0xF09018)]
-        case .civilTwilight:        return [Color(hex: 0x9E3810), Color(hex: 0xE06030)]
-        case .softLight:            return [Color(hex: 0x907010), Color(hex: 0xD0A820)]
+        case .astronomicalTwilight: return Color(hex: 0x0D1B2A)
+        case .nauticalTwilight:     return Color(hex: 0x1A1A4E)
+        case .blueHour:             return Color(hex: 0x1B3A6B)
+        case .goldenHour:           return Color(hex: 0x92400E)
+        case .civilTwilight:        return Color(hex: 0x7C2D12)
+        case .softLight:            return Color(hex: 0x164E63)
         }
     }
 
-    var dotColor: Color { accentColors[1] }
-
-    /// Bright phases where dark text reads better on the dotColor badge background
-    var usesDarkBadgeText: Bool {
+    var boxOpacity: Double {
         switch kind {
-        case .goldenHour, .civilTwilight, .softLight: return true
-        default: return false
+        case .astronomicalTwilight, .nauticalTwilight: return 0.90
+        default: return 0.88
+        }
+    }
+
+    /// Left accent bar color — a lighter shade of the box background.
+    var accentBarColor: Color {
+        switch kind {
+        case .astronomicalTwilight: return Color(hex: 0x1E3A5A)
+        case .nauticalTwilight:     return Color(hex: 0x2E2E80)
+        case .blueHour:             return Color(hex: 0x2A5AA0)
+        case .goldenHour:           return Color(hex: 0xC05A18)
+        case .civilTwilight:        return Color(hex: 0xA83E1A)
+        case .softLight:            return Color(hex: 0x1E6E90)
         }
     }
 
@@ -216,12 +226,11 @@ private struct PhaseGridCell: View {
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
 
-            // ── Left accent bar ────────────────────────────────────────
-            LinearGradient(colors: phase.accentColors,
-                           startPoint: .top, endPoint: .bottom)
+            // ── Left accent bar — lighter shade of box color ───────────
+            phase.accentBarColor
                 .frame(width: 3)
                 .clipShape(RoundedRectangle(cornerRadius: 1.5))
-                .opacity(isDone ? 0.28 : (isActive ? 1.0 : 0.65))
+                .opacity(isDone ? 0.28 : (isActive ? 1.0 : 0.70))
 
             // ── Content ────────────────────────────────────────────────
             VStack(alignment: .leading, spacing: 7) {
@@ -233,14 +242,16 @@ private struct PhaseGridCell: View {
                         .foregroundStyle(.white.opacity(isDone ? 0.32 : 1.0))
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
+                        .shadow(color: .black.opacity(0.60), radius: 3, x: 0, y: 1)
                     Spacer(minLength: 2)
                     statusBadge
                 }
 
-                // Altitude range
+                // Altitude range — white
                 Text(phase.altRange)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(phase.dotColor.opacity(isDone ? 0.28 : 0.85))
+                    .foregroundStyle(.white.opacity(isDone ? 0.28 : 0.85))
+                    .shadow(color: .black.opacity(0.55), radius: 2, x: 0, y: 1)
 
                 // Morning window
                 windowLine(isRising: true,
@@ -254,37 +265,36 @@ private struct PhaseGridCell: View {
                            end:   phase.eveningEnd,
                            dur:   phase.eveningDurationMinutes())
 
-                // Evocative description
+                // Evocative description — white at 80%
                 Text(phase.phrase)
                     .font(.system(size: 15).italic())
-                    .foregroundStyle(.white.opacity(isDone ? 0.22 : 0.58))
+                    .foregroundStyle(.white.opacity(isDone ? 0.22 : 0.80))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 2)
+                    .shadow(color: .black.opacity(0.55), radius: 2, x: 0, y: 1)
             }
             .padding(.leading, 14)
             .padding(.trailing, 14)
             .padding(.vertical, 18)
         }
-        // Dark frosted glass — readable on any sky gradient
+        // Per-phase solid color — sky gradient peeks through at set opacity
         .background {
             RoundedRectangle(cornerRadius: 13)
-                .fill(.regularMaterial)
-                .environment(\.colorScheme, .dark)
-                .overlay(RoundedRectangle(cornerRadius: 13).fill(Color.black.opacity(0.32)))
+                .fill(phase.boxBackground.opacity(phase.boxOpacity))
         }
         .overlay {
             RoundedRectangle(cornerRadius: 13)
                 .strokeBorder(
                     isActive
-                        ? phase.dotColor.opacity(glowPulse ? 0.90 : 0.48)
-                        : Color.white.opacity(isDone ? 0.05 : 0.11),
-                    lineWidth: isActive ? 1.5 : 1
+                        ? Color.white.opacity(glowPulse ? 1.0 : 0.65)
+                        : Color.white.opacity(isDone ? 0.05 : 0.15),
+                    lineWidth: isActive ? 2.0 : 1
                 )
         }
         .shadow(
-            color: isActive ? phase.dotColor.opacity(glowPulse ? 0.38 : 0.10) : .clear,
-            radius: 10, x: 0, y: 0
+            color: isActive ? Color.white.opacity(glowPulse ? 0.35 : 0.10) : .clear,
+            radius: 12, x: 0, y: 0
         )
         .opacity(isDone ? 0.65 : 1.0)
         .onAppear {
@@ -302,23 +312,24 @@ private struct PhaseGridCell: View {
         if isActive {
             Text("NOW")
                 .font(.system(size: 12, weight: .black))
-                .foregroundStyle(phase.usesDarkBadgeText ? Color.black.opacity(0.78) : Color.white)
+                .foregroundStyle(.white)
                 .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(phase.dotColor, in: Capsule())
+                .background(.white.opacity(0.25), in: Capsule())
+                .overlay(Capsule().strokeBorder(.white.opacity(0.80), lineWidth: 1))
         } else if let n = phase.nextWindow(after: now) {
             let secs = max(0, n.start.timeIntervalSince(now))
             let h = Int(secs) / 3600; let m = (Int(secs) % 3600) / 60
             Text(h > 0 ? "\(h)h \(m)m" : "\(m)m")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(phase.dotColor)
+                .foregroundStyle(.white)
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(phase.accentColors[0].opacity(0.32), in: Capsule())
+                .background(.white.opacity(0.18), in: Capsule())
         } else {
             Image(systemName: "checkmark")
                 .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(.white.opacity(0.24))
+                .foregroundStyle(.white.opacity(0.30))
                 .padding(.horizontal, 6).padding(.vertical, 3)
-                .background(.white.opacity(0.06), in: Capsule())
+                .background(.white.opacity(0.08), in: Capsule())
         }
     }
 
@@ -329,7 +340,7 @@ private struct PhaseGridCell: View {
         HStack(spacing: 5) {
             Image(systemName: isRising ? "sunrise.fill" : "sunset.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(phase.dotColor.opacity(isDone ? 0.24 : 0.65))
+                .foregroundStyle(.white.opacity(isDone ? 0.24 : 0.70))
                 .frame(width: 18)
 
             if let s = start, let e = end {
@@ -338,10 +349,12 @@ private struct PhaseGridCell: View {
                     .foregroundStyle(.white.opacity(isDone ? 0.26 : 0.90))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
+                    .shadow(color: .black.opacity(0.55), radius: 2, x: 0, y: 1)
                 if let d = dur {
                     Text("·\(d)m")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(isDone ? 0.18 : 0.45))
+                        .foregroundStyle(.white.opacity(isDone ? 0.18 : 0.55))
+                        .shadow(color: .black.opacity(0.55), radius: 2, x: 0, y: 1)
                 }
             } else {
                 Text("n/a")
