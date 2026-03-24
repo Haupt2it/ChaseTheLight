@@ -1,0 +1,152 @@
+================================================================================
+  CHASE THE LIGHT — APP STORE ASSETS
+  Bundle ID: com.Haupt2it.ChaseTheLight
+  Version: 1.0.0 (Build 1)
+================================================================================
+
+APP NAME (30 chars max)
+-----------------------
+Chase the Light
+
+
+SUBTITLE (30 chars max)
+-----------------------
+Sun & Sky for Photographers
+
+
+DESCRIPTION (up to 4000 chars)
+-------------------------------
+Chase the Light is the essential companion for photographers who live and breathe
+natural light. Whether you're planning a sunrise portrait session, scouting a
+golden-hour landscape, or hunting the perfect blue-hour cityscape shot — Chase
+the Light tells you exactly when every magical light phase begins, how long it
+lasts, and what it's best suited for.
+
+REAL-TIME SUN TRACKING
+The animated sun arc shows you precisely where the sun sits right now, arcing
+from sunrise to sunset with your current altitude displayed live. At a glance you
+know whether you have minutes or hours before the light changes.
+
+SIX LIGHT PHASES — FULLY TIMED
+• Astronomical Twilight (-18° → -12°) — Stars brilliant, sky still dark
+• Nautical Twilight (-12° → -6°) — Deep violet blue bleeds to the horizon
+• Blue Hour (-6° → 0°) — Even, shadowless, cool blue light
+• Golden Hour (0° → 6°) — Warm directional light, long dramatic shadows
+• Civil Twilight (6° → 12°) — Soft diffuse warmth, gentle contrast
+• Soft Light (12° → 45°) — Full color, subtle texture, gentle glow
+
+Each phase shows morning and evening windows with exact start/end times, duration
+in minutes, and photography specialties (portraits, landscapes, astrophoto, and
+more). Active phases glow so you never miss the moment.
+
+LIVE SATELLITE VIEW
+Pull up a real-time GOES-East GeoColor satellite image refreshed every 15 minutes.
+See cloud cover and weather patterns across the continent at a glance — no more
+stepping outside to discover an overcast sky. Tap for a full-screen view.
+
+DYNAMIC SKY BACKGROUNDS
+The app background shifts in real time with the sun — deep midnight navy at night,
+purple-to-amber twilight, warm golden hour tones, and crisp blue daylight sky.
+The interface always matches the light outside your window.
+
+PRIVACY FIRST
+Location is used only while the app is open and never stored or shared. No account
+required. No ads. No tracking.
+
+PERFECT FOR
+• Landscape and travel photographers
+• Portrait photographers chasing the golden glow
+• Astrophotographers timing their night sessions
+• Videographers and cinematographers
+• Anyone who wants to be outside at the right moment
+
+
+KEYWORDS (100 chars max)
+-------------------------
+photography,golden hour,blue hour,sunrise,sunset,sun tracker,light phases,sky,weather
+
+
+PROMOTIONAL TEXT (170 chars max — can be updated without a new build)
+----------------------------------------------------------------------
+Know every light phase before you leave the house. Real-time sun tracking + live
+satellite imagery for photographers chasing perfect light.
+
+
+WHAT'S NEW (Version 1.0.0)
+---------------------------
+Welcome to Chase the Light! This is the initial release.
+
+• Real-time sun arc with live altitude display
+• Six timed light phases with morning and evening windows
+• Live GOES-East GeoColor satellite imagery (refreshes every 15 min)
+• Dynamic sky backgrounds that match the current light
+• Automatic location detection with place name display
+
+
+CATEGORY SUGGESTIONS
+--------------------
+Primary:   Photo & Video
+Secondary: Weather
+
+
+RATING
+------
+4+ (No objectionable content)
+
+
+PRIVACY POLICY URL (required for apps using location)
+------------------------------------------------------
+[You must provide a privacy policy URL before submitting — even a simple page
+ hosted on GitHub Pages counts. It must describe that location data is used
+ only on-device for sun calculations and is never transmitted to any server.]
+
+
+APP STORE SCREENSHOTS — RECOMMENDED SHOTS
+------------------------------------------
+1. Main screen (golden hour active, sun arc glowing) — "Know the light before you shoot"
+2. Light phases grid (blue hour / golden hour cards highlighted)
+3. Live satellite full-screen view
+4. Main screen at night / astronomical twilight
+5. Main screen at solar noon / daylight sky
+
+Recommended devices: iPhone 16 Pro Max (6.9"), iPhone 16 (6.1"), iPad Pro 13"
+
+
+APPLE SEARCH ADS KEYWORDS (optional, for Search Ads campaigns)
+---------------------------------------------------------------
+golden hour app
+blue hour photography
+sunrise sunset times
+sun position tracker
+photography planning app
+natural light app
+sky photography
+landscape photography app
+
+
+================================================================================
+  TECHNICAL NOTES FOR APP STORE CONNECT
+================================================================================
+
+REQUIRED BEFORE SUBMISSION
+---------------------------
+1. Add 1024×1024 AppIcon PNG(s) to:
+   SunAndSky/Assets.xcassets/AppIcon.appiconset/
+   (Contents.json already has the correct structure for standard, dark, and tinted icons)
+   File names expected: AppIcon.png, AppIcon-dark.png, AppIcon-tinted.png
+
+2. Sign the app with your Apple Developer account in Xcode:
+   Signing & Capabilities → Team → Haupt2it (or your registered team)
+
+3. Create a Privacy Policy page and add its URL in App Store Connect
+
+4. Entitlements: Location When In Use only (no background modes needed)
+
+5. Export Compliance: No encryption used → answer "No" to encryption questions
+
+CAPABILITIES USED
+-----------------
+• CoreLocation (WhenInUse) — sun/phase calculations for current position
+• Network access — GOES satellite image download from cdn.star.nesdis.noaa.gov
+• MapKit — reverse geocoding for place name display
+================================================================================
