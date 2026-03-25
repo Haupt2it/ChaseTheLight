@@ -7,7 +7,8 @@ import MapKit
 
 struct ContentView: View {
 
-    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var settings:   AppSettings
+    @EnvironmentObject private var proManager: ProManager
 
     @StateObject private var location         = LocationManager()
     @StateObject private var weatherService   = WeatherService()
@@ -106,6 +107,12 @@ struct ContentView: View {
                                 .padding(.horizontal, 24)
                         }
 
+                        // ── Chase the Light Alerts (Pro) ──────────────
+                        AlertsProRow()
+                            .padding(.horizontal, 24)
+                            .padding(.top, 16)
+
+                        // ── Satellite card ─────────────────────────────
                         if settings.showSatelliteCard {
                             SatelliteCard(
                                 image:       satelliteService.image,
@@ -254,4 +261,52 @@ extension Color {
     }
 }
 
-#Preview { ContentView().environmentObject(AppSettings()) }
+// MARK: - AlertsProRow
+
+private struct AlertsProRow: View {
+    @EnvironmentObject private var proManager: ProManager
+    @State private var showUpgrade = false
+
+    var body: some View {
+        Button { if !proManager.isPro { showUpgrade = true } } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0xFFBB00).opacity(0.14))
+                        .frame(width: 46, height: 46)
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color(hex: 0xFFBB00))
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text("Chase the Light Alerts")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                        if !proManager.isPro { ProBadge() }
+                    }
+                    Text(proManager.isPro
+                         ? "Alerts active — tap to manage"
+                         : "Reminders before golden hour, sunrise & sunset")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                Spacer()
+                Image(systemName: proManager.isPro ? "chevron.right" : "lock.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(proManager.isPro
+                                     ? .white.opacity(0.30)
+                                     : Color(hex: 0xFFBB00).opacity(0.55))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(.plain)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .environment(\.colorScheme, .dark)
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.10), lineWidth: 1))
+        .sheet(isPresented: $showUpgrade) { UpgradeSheet() }
+    }
+}
+
+#Preview { ContentView().environmentObject(AppSettings()).environmentObject(ProManager()) }

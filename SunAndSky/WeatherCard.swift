@@ -42,7 +42,7 @@ struct CurrentConditionsCard: View {
             if settings.showForecastStrip {
                 Divider().overlay(.white.opacity(0.25)).padding(.horizontal, 14)
 
-                // ── 24-hour forecast strip section header ─────────────────
+                // ── 24-hour forecast strip ────────────────────────────
                 HStack {
                     Text("24-Hour Forecast")
                         .font(.system(size: 16, weight: .semibold))

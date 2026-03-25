@@ -48,7 +48,6 @@ struct SatelliteCard: View {
             }
             .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 10)
 
-            // ── Thumbnail ─────────────────────────────────────────────
             thumbnailContent
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
