@@ -100,7 +100,7 @@ struct SatelliteCard: View {
                     ProgressView().tint(.white)
                 } else {
                     VStack(spacing: 8) {
-                        Image(systemName: "satellite")
+                        Image(systemName: "antenna.radiowaves.left.and.right")
                             .font(.title2).foregroundStyle(.white.opacity(0.4))
                         Text("Loading satellite image…")
                             .font(.system(size: 17)).foregroundStyle(.white.opacity(0.4))
@@ -140,7 +140,7 @@ private struct SatelliteFullScreen: View {
                     Color(hex: 0x0A1628)
                         .overlay {
                             VStack(spacing: 14) {
-                                Image(systemName: "satellite")
+                                Image(systemName: "antenna.radiowaves.left.and.right")
                                     .font(.largeTitle).foregroundStyle(.white.opacity(0.4))
                                 Text("No image available")
                                     .font(.system(size: 17))

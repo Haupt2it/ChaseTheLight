@@ -18,7 +18,10 @@ struct ContentView: View {
     @State private var isSearching   = false
     @State private var searchError:  String?
     @State private var isGeocoding   = false
-    @State private var showSettings  = false
+    @State private var showSettings              = false
+    @State private var showUpgrade               = false
+    @State private var showNotificationSettings  = false
+    @State private var showProToast              = false
 
     @State private var pinnedCoordinate: CLLocationCoordinate2D?
     @State private var pinnedPlaceName:  String = ""
@@ -75,9 +78,13 @@ struct ContentView: View {
                         )
                         .padding(.top, 20)
 
-                        SolarInfoGrid(solar: solar, timeZone: activeTimeZone)
-                            .padding(.top, 12)
-                            .padding(.horizontal, 24)
+                        // ── Alerts banner ─────────────────────────────
+                        AlertsRow(
+                            showUpgrade:              $showUpgrade,
+                            showNotificationSettings: $showNotificationSettings
+                        )
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
 
                         if let coord = activeCoordinate {
                             LightPhaseTimelineView(
@@ -107,10 +114,6 @@ struct ContentView: View {
                                 .padding(.horizontal, 24)
                         }
 
-                        // ── Chase the Light Alerts (Pro) ──────────────
-                        AlertsProRow()
-                            .padding(.horizontal, 24)
-                            .padding(.top, 16)
 
                         // ── Satellite card ─────────────────────────────
                         if settings.showSatelliteCard {
@@ -133,6 +136,26 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
+
+            // ── Purchase success toast ─────────────────────────────────
+            if showProToast {
+                VStack {
+                    Spacer()
+                    Text("Welcome to Chase the Light Pro! ✨")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
+                        .background(Color(red: 0.04, green: 0.52, blue: 0.25).opacity(0.97),
+                                    in: RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 4)
+                        .padding(.horizontal, 32)
+                        .padding(.bottom, 48)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                .allowsHitTesting(false)
+            }
         }
         .onAppear {
             location.requestLocation()
@@ -142,7 +165,15 @@ struct ContentView: View {
             satelliteService.start(imageURL: region.imageURL)
         }
         .sheet(isPresented: $showSettings) {
-            SettingsSheet().environmentObject(settings)
+            SettingsSheet()
+                .environmentObject(settings)
+                .environmentObject(proManager)
+        }
+        .sheet(isPresented: $showUpgrade) {
+            UpgradeSheet().environmentObject(proManager)
+        }
+        .sheet(isPresented: $showNotificationSettings) {
+            NotificationSettingsSheet().environmentObject(settings)
         }
         .onReceive(location.$coordinate) { coord in
             guard pinnedCoordinate == nil, let coord else { return }
@@ -152,6 +183,14 @@ struct ContentView: View {
         .onReceive(timer) { date in
             now = date
             recalculate(coord: activeCoordinate)
+        }
+        .onChange(of: proManager.isPro) { _, isPro in
+            if isPro {
+                withAnimation(.spring(duration: 0.45)) { showProToast = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                    withAnimation(.easeOut(duration: 0.35)) { showProToast = false }
+                }
+            }
         }
     }
 
@@ -261,52 +300,5 @@ extension Color {
     }
 }
 
-// MARK: - AlertsProRow
-
-private struct AlertsProRow: View {
-    @EnvironmentObject private var proManager: ProManager
-    @State private var showUpgrade = false
-
-    var body: some View {
-        Button { if !proManager.isPro { showUpgrade = true } } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: 0xFFBB00).opacity(0.14))
-                        .frame(width: 46, height: 46)
-                    Image(systemName: "bell.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Color(hex: 0xFFBB00))
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        Text("Chase the Light Alerts")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
-                        if !proManager.isPro { ProBadge() }
-                    }
-                    Text(proManager.isPro
-                         ? "Alerts active — tap to manage"
-                         : "Reminders before golden hour, sunrise & sunset")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.white.opacity(0.55))
-                }
-                Spacer()
-                Image(systemName: proManager.isPro ? "chevron.right" : "lock.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(proManager.isPro
-                                     ? .white.opacity(0.30)
-                                     : Color(hex: 0xFFBB00).opacity(0.55))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-        }
-        .buttonStyle(.plain)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .environment(\.colorScheme, .dark)
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.10), lineWidth: 1))
-        .sheet(isPresented: $showUpgrade) { UpgradeSheet() }
-    }
-}
 
 #Preview { ContentView().environmentObject(AppSettings()).environmentObject(ProManager()) }

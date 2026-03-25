@@ -154,6 +154,9 @@ struct UpgradeSheet: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onChange(of: proManager.isPro) { _, isPro in
+            if isPro { dismiss() }
+        }
     }
 }
 

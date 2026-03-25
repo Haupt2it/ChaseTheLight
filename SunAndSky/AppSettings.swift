@@ -70,6 +70,27 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(showForecastStrip, forKey: Keys.showForecastStrip) }
     }
 
+    // MARK: Notification alert settings
+
+    @Published var sunriseAlertEnabled: Bool {
+        didSet { UserDefaults.standard.set(sunriseAlertEnabled, forKey: Keys.sunriseAlertEnabled) }
+    }
+    @Published var sunriseLeadMinutes: Int {
+        didSet { UserDefaults.standard.set(sunriseLeadMinutes, forKey: Keys.sunriseLeadMinutes) }
+    }
+    @Published var sunsetAlertEnabled: Bool {
+        didSet { UserDefaults.standard.set(sunsetAlertEnabled, forKey: Keys.sunsetAlertEnabled) }
+    }
+    @Published var sunsetLeadMinutes: Int {
+        didSet { UserDefaults.standard.set(sunsetLeadMinutes, forKey: Keys.sunsetLeadMinutes) }
+    }
+    @Published var goldenHourAlertEnabled: Bool {
+        didSet { UserDefaults.standard.set(goldenHourAlertEnabled, forKey: Keys.goldenHourAlertEnabled) }
+    }
+    @Published var blueHourAlertEnabled: Bool {
+        didSet { UserDefaults.standard.set(blueHourAlertEnabled, forKey: Keys.blueHourAlertEnabled) }
+    }
+
     // MARK: Init
 
     init() {
@@ -81,6 +102,13 @@ final class AppSettings: ObservableObject {
         // Bool keys default false — use object check so these default to true on first launch
         showSatelliteCard = ud.object(forKey: Keys.showSatelliteCard) as? Bool ?? true
         showForecastStrip = ud.object(forKey: Keys.showForecastStrip) as? Bool ?? true
+        // Notification settings (default off; lead time defaults to 15 min)
+        sunriseAlertEnabled    = ud.bool(forKey: Keys.sunriseAlertEnabled)
+        sunriseLeadMinutes     = ud.object(forKey: Keys.sunriseLeadMinutes) as? Int ?? 15
+        sunsetAlertEnabled     = ud.bool(forKey: Keys.sunsetAlertEnabled)
+        sunsetLeadMinutes      = ud.object(forKey: Keys.sunsetLeadMinutes) as? Int ?? 15
+        goldenHourAlertEnabled = ud.bool(forKey: Keys.goldenHourAlertEnabled)
+        blueHourAlertEnabled   = ud.bool(forKey: Keys.blueHourAlertEnabled)
     }
 
     // MARK: Formatting helpers
@@ -118,7 +146,13 @@ final class AppSettings: ObservableObject {
         static let use24HourTime   = "use24HourTime"
         static let useCelsius      = "useCelsius"
         static let satelliteRegion = "satelliteRegion"
-        static let showSatelliteCard = "showSatelliteCard"
-        static let showForecastStrip = "showForecastStrip"
+        static let showSatelliteCard       = "showSatelliteCard"
+        static let showForecastStrip       = "showForecastStrip"
+        static let sunriseAlertEnabled     = "sunriseAlertEnabled"
+        static let sunriseLeadMinutes      = "sunriseLeadMinutes"
+        static let sunsetAlertEnabled      = "sunsetAlertEnabled"
+        static let sunsetLeadMinutes       = "sunsetLeadMinutes"
+        static let goldenHourAlertEnabled  = "goldenHourAlertEnabled"
+        static let blueHourAlertEnabled    = "blueHourAlertEnabled"
     }
 }

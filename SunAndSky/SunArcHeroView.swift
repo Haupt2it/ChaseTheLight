@@ -57,6 +57,7 @@ struct SunArcHeroView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300)
         .clipped()
+        .allowsHitTesting(false)
     }
 }
 
@@ -126,23 +127,7 @@ struct LocationHeaderView: View {
                 .foregroundStyle(.white.opacity(0.7))
 
             if let solar {
-                HStack(spacing: 0) {
-                    Text(SkyTheme.make(sunAltitude: solar.altitude).label).pill()
-                    Spacer(minLength: 8)
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .foregroundStyle(.white.opacity(0.65))
-                        Text(String(format: "%.1f°", solar.altitude))
-                            .foregroundStyle(.white)
-                        Text("·").foregroundStyle(.white.opacity(0.35))
-                        Image(systemName: "safari.fill")
-                            .foregroundStyle(.white.opacity(0.65))
-                        Text(String(format: "%.0f° %@", solar.azimuth,
-                                    compassPoint(solar.azimuth)))
-                            .foregroundStyle(.white)
-                    }
-                    .font(.system(size: 15, weight: .medium))
-                }
+                skyInfoPill(solar: solar)
             }
 
             if hasPinnedCoordinate {
@@ -156,6 +141,56 @@ struct LocationHeaderView: View {
                 .padding(.top, 2)
             }
         }
+    }
+
+    // MARK: Sky info pill
+
+    private func skyInfoPill(solar: SolarInfo) -> some View {
+        HStack(spacing: 0) {
+            // ── Sky condition ─────────────────────────────────────────
+            Text(SkyTheme.make(sunAltitude: solar.altitude).label)
+
+            pillDivider
+
+            // ── Solar Noon ────────────────────────────────────────────
+            HStack(spacing: 4) {
+                Image(systemName: "sun.max.fill")
+                    .foregroundStyle(.white.opacity(0.75))
+                Text(solar.solarNoon.map { settings.timeString($0, timeZone: timeZone) } ?? "—")
+            }
+
+            pillDivider
+
+            // ── Day Length ────────────────────────────────────────────
+            HStack(spacing: 4) {
+                Text("Length of Day")
+                Image(systemName: "clock.fill")
+                    .foregroundStyle(.white.opacity(0.75))
+                Text(dayLengthStr(solar.dayLength))
+            }
+        }
+        .font(.caption.weight(.medium))
+        .foregroundStyle(.white.opacity(0.85))
+        .lineLimit(1)
+        .minimumScaleFactor(0.80)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(.white.opacity(0.15), in: Capsule())
+    }
+
+    private var pillDivider: some View {
+        Rectangle()
+            .fill(.white.opacity(0.28))
+            .frame(width: 1, height: 11)
+            .padding(.horizontal, 10)
+    }
+
+    private func dayLengthStr(_ seconds: TimeInterval) -> String {
+        if seconds == 0     { return "Polar Night" }
+        if seconds >= 86400 { return "Midnight Sun" }
+        let h = Int(seconds) / 3600
+        let m = (Int(seconds) % 3600) / 60
+        return String(format: "%dh %02dm", h, m)
     }
 
     // MARK: Search bar

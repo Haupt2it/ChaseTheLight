@@ -38,28 +38,55 @@ struct SunriseSunsetCard: View {
     }
 }
 
-// MARK: - SolarInfoGrid
+// MARK: - AlertsRow
 
-struct SolarInfoGrid: View {
-    @EnvironmentObject private var settings: AppSettings
-
-    let solar:    SolarInfo
-    let timeZone: TimeZone?
-
-    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+struct AlertsRow: View {
+    @EnvironmentObject private var proManager: ProManager
+    @Binding var showUpgrade:              Bool
+    @Binding var showNotificationSettings: Bool
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
-            StatCard(title: "Solar Noon", value: solar.solarNoon.map { settings.timeString($0, timeZone: timeZone) } ?? "—", icon: "sun.max.fill")
-            StatCard(title: "Day Length", value: dayLengthString(solar.dayLength),                                           icon: "clock.fill")
+        Button {
+            if proManager.isPro { showNotificationSettings = true }
+            else                { showUpgrade = true }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0xFFBB00).opacity(0.14))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color(hex: 0xFFBB00))
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text("Chase the Light Alerts")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                        if !proManager.isPro { ProBadge() }
+                    }
+                    Text(proManager.isPro
+                         ? "Alerts active — tap to manage"
+                         : "Reminders before golden hour, sunrise & sunset")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                Spacer()
+                Image(systemName: proManager.isPro ? "chevron.right" : "lock.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(proManager.isPro
+                                     ? .white.opacity(0.30)
+                                     : Color(hex: 0xFFBB00).opacity(0.55))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
-    }
-
-    private func dayLengthString(_ seconds: TimeInterval) -> String {
-        if seconds == 0     { return "Polar Night" }
-        if seconds >= 86400 { return "Midnight Sun" }
-        let h = Int(seconds) / 3600; let m = (Int(seconds) % 3600) / 60
-        return String(format: "%dh %02dm", h, m)
+        .buttonStyle(.plain)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .environment(\.colorScheme, .dark)
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.10), lineWidth: 1))
     }
 }
 
@@ -203,23 +230,3 @@ private struct SunHeroCard: View {
     }
 }
 
-// MARK: - StatCard
-
-private struct StatCard: View {
-    let title: String
-    let value: String
-    let icon:  String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).font(.title2).foregroundStyle(.white.opacity(0.85)).frame(width: 30)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 15)).foregroundStyle(.white.opacity(0.6))
-                Text(value).font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
-            }
-            Spacer()
-        }
-        .padding(16)
-        .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
-    }
-}
