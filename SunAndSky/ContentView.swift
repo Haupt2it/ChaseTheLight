@@ -81,7 +81,10 @@ struct ContentView: View {
                         // ── Alerts banner ─────────────────────────────
                         AlertsRow(
                             showUpgrade:              $showUpgrade,
-                            showNotificationSettings: $showNotificationSettings
+                            showNotificationSettings: $showNotificationSettings,
+                            solar:                    solar,
+                            now:                      now,
+                            timeZone:                 activeTimeZone
                         )
                         .padding(.horizontal, 24)
                         .padding(.top, 12)
