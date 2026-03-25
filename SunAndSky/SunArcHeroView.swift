@@ -49,23 +49,27 @@ struct SunArcHeroView: View {
             }
             .allowsHitTesting(false)
 
-            // ── Title + tagline in sky zone (non-interactive) ─────────
-            VStack(spacing: 8) {
-                Text("Chase the Light")
-                    .font(.system(size: 44, weight: .heavy, design: .default))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.70), radius: 6,  x: 0, y: 3)
-                    .shadow(color: .black.opacity(0.35), radius: 24, x: 0, y: 0)
+            // ── Title + tagline just above the horizon (non-interactive) ─
+            // Horizon at 68% = 204pt; ZStack centre = 150pt.
+            // offset -15 → VStack centre at 135pt; bottom edge ≈ 175pt,
+            // leaving ~29pt of breathing room before the horizon at 204pt.
+            VStack(spacing: 2) {
+                Text("CHASE THE LIGHT")
+                    .font(.system(size: 62, weight: .ultraLight, design: .default))
+                    .tracking(62 * 0.15)
+                    .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))   // #FFF8E1
+                    .shadow(color: .black.opacity(0.55), radius: 6, x: 0, y: 2)
                     .multilineTextAlignment(.center)
 
                 Text("Sun, sky, and the perfect moment \u{2014} all in one place.")
-                    .font(.system(size: 17).italic())
-                    .foregroundStyle(.white.opacity(0.85))
-                    .shadow(color: .black.opacity(0.60), radius: 5, x: 0, y: 1)
+                    .font(.system(size: 18, weight: .regular, design: .serif).italic())
+                    .tracking(18 * 0.05)
+                    .foregroundStyle(Color(red: 1.0, green: 0.878, blue: 0.698))   // #FFE0B2
+                    .shadow(color: .black.opacity(0.50), radius: 4, x: 0, y: 1)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
-            .offset(y: -50)
+            .offset(y: -15)
             .allowsHitTesting(false)
 
             // ── Interactive ground zone ────────────────────────────────
