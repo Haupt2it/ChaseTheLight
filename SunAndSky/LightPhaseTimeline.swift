@@ -179,6 +179,7 @@ struct LightPhaseTimelineView: View {
     let now:             Date
     let timeZone:        TimeZone?
     let currentAltitude: Double
+    @Binding var phaseDisplayModes: [String: Int]
 
     private let columns = [GridItem(.flexible(), spacing: 10),
                            GridItem(.flexible(), spacing: 10)]
@@ -204,7 +205,13 @@ struct LightPhaseTimelineView: View {
             // ── 2 × 3 grid ────────────────────────────────────────────
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(phases) { phase in
-                    PhaseGridCell(phase: phase, now: now, timeZone: timeZone)
+                    PhaseGridCell(
+                        phase:              phase,
+                        now:                now,
+                        timeZone:           timeZone,
+                        displayMode:        phaseDisplayModes[phase.name] ?? 0,
+                        onDisplayModeChange: { phaseDisplayModes[phase.name] = $0 }
+                    )
                 }
             }
         }
@@ -216,14 +223,29 @@ struct LightPhaseTimelineView: View {
 private struct PhaseGridCell: View {
     @EnvironmentObject private var settings: AppSettings
 
-    let phase:    LightPhase
-    let now:      Date
-    let timeZone: TimeZone?
+    let phase:               LightPhase
+    let now:                 Date
+    let timeZone:            TimeZone?
+    let displayMode:         Int          // lifted to ContentView — survives 1-second timer rebuilds
+    let onDisplayModeChange: (Int) -> Void
 
     @State private var glowPulse = false
 
     private var isActive: Bool { phase.isActive(at: now) }
     private var isDone:   Bool { phase.nextWindow(after: now) == nil && !isActive }
+
+    /// The window to show in states 1 & 2: active window, then next upcoming, then last passed.
+    private var displayWindow: (start: Date, end: Date)? {
+        if isActive {
+            if let s = phase.morningStart, let e = phase.morningEnd, now >= s && now <= e { return (s, e) }
+            if let s = phase.eveningStart, let e = phase.eveningEnd, now >= s && now <= e { return (s, e) }
+        }
+        if let n = phase.nextWindow(after: now) { return (n.start, n.end) }
+        // done — show evening window, fall back to morning
+        if let s = phase.eveningStart, let e = phase.eveningEnd { return (s, e) }
+        if let s = phase.morningStart, let e = phase.morningEnd { return (s, e) }
+        return nil
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
@@ -246,7 +268,7 @@ private struct PhaseGridCell: View {
                         .minimumScaleFactor(0.75)
                         .shadow(color: .black.opacity(0.60), radius: 3, x: 0, y: 1)
                     Spacer(minLength: 2)
-                    statusBadge
+                    timeBubble
                 }
 
                 // Altitude range — white
@@ -307,31 +329,60 @@ private struct PhaseGridCell: View {
         }
     }
 
-    // MARK: Status badge
+    // MARK: Time bubble (tappable — cycles countdown → times → duration)
 
     @ViewBuilder
-    private var statusBadge: some View {
-        if isActive {
+    private var timeBubble: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { onDisplayModeChange((displayMode + 1) % 3) }
+        } label: {
+            HStack(spacing: 4) {
+                bubbleLabel
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.38))
+            }
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(
+                (isActive && displayMode == 0) ? Color.white.opacity(0.25) : Color.white.opacity(0.18),
+                in: Capsule()
+            )
+            .overlay {
+                if isActive && displayMode == 0 {
+                    Capsule().strokeBorder(.white.opacity(0.80), lineWidth: 1)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var bubbleLabel: some View {
+        if displayMode == 1, let w = displayWindow {
+            Text("\(fmt(w.start))–\(fmt(w.end))")
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        } else if displayMode == 2, let w = displayWindow {
+            let dur = Int(w.end.timeIntervalSince(w.start) / 60)
+            Text("\(dur) min")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+        } else if isActive {
             Text("NOW")
                 .font(.system(size: 24, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(.white.opacity(0.25), in: Capsule())
-                .overlay(Capsule().strokeBorder(.white.opacity(0.80), lineWidth: 1))
         } else if let n = phase.nextWindow(after: now) {
             let secs = max(0, n.start.timeIntervalSince(now))
             let h = Int(secs) / 3600; let m = (Int(secs) % 3600) / 60
             Text(h > 0 ? "\(h)h \(m)m" : "\(m)m")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(.white.opacity(0.18), in: Capsule())
         } else {
             Image(systemName: "checkmark")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(.white.opacity(0.30))
-                .padding(.horizontal, 6).padding(.vertical, 3)
-                .background(.white.opacity(0.08), in: Capsule())
         }
     }
 

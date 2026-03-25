@@ -24,6 +24,8 @@ struct ContentView: View {
     @State private var showNotificationSettings  = false
     @State private var showProToast              = false
 
+    @State private var phaseDisplayModes: [String: Int] = [:]
+
     @State private var pinnedCoordinate: CLLocationCoordinate2D?
     @State private var pinnedPlaceName:  String = ""
     @State private var locationTimeZone: TimeZone?
@@ -103,9 +105,10 @@ struct ContentView: View {
                                     longitude: coord.longitude,
                                     solar:     solar
                                 ),
-                                now:             now,
-                                timeZone:        activeTimeZone,
-                                currentAltitude: solar.altitude
+                                now:              now,
+                                timeZone:         activeTimeZone,
+                                currentAltitude:  solar.altitude,
+                                phaseDisplayModes: $phaseDisplayModes
                             )
                             .padding(.top, 16)
                             .padding(.horizontal, 24)

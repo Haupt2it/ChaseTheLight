@@ -54,7 +54,7 @@ struct SunArcHeroView: View {
             // offset -15 → VStack centre at 135pt; bottom edge ≈ 175pt,
             // leaving ~29pt of breathing room before the horizon at 204pt.
             VStack(spacing: 2) {
-                Text("CHASE THE LIGHT")
+                Text("Chase the Light")
                     .font(.system(size: 62, weight: .ultraLight, design: .default))
                     .tracking(62 * 0.15)
                     .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))   // #FFF8E1
