@@ -189,6 +189,7 @@ private struct ProAlertsCard: View {
         let triggerDate: Date?
         let isTomorrow:  Bool
         let color:       Color
+        let leadMinutes: Int?   // nil for alerts without a configurable lead time
     }
 
     private var activeAlerts: [AlertItem] {
@@ -203,7 +204,8 @@ private struct ProAlertsCard: View {
                 : todayTrigger
             items.append(.init(kind: .sunrise, icon: "🌅", name: "Sunrise",
                                triggerDate: trigger, isTomorrow: isTomorrow,
-                               color: Color(hex: 0x92400E)))
+                               color: Color(hex: 0x92400E),
+                               leadMinutes: settings.sunriseLeadMinutes))
         }
         if settings.sunsetAlertEnabled {
             let trigger = solar.sunset.map {
@@ -211,19 +213,22 @@ private struct ProAlertsCard: View {
             }
             items.append(.init(kind: .sunset, icon: "🌇", name: "Sunset",
                                triggerDate: trigger, isTomorrow: false,
-                               color: Color(hex: 0x7F1D1D)))
+                               color: Color(hex: 0x7F1D1D),
+                               leadMinutes: settings.sunsetLeadMinutes))
         }
         if settings.goldenHourAlertEnabled {
             let trigger = solar.sunset.map { $0.addingTimeInterval(-3600) }
             items.append(.init(kind: .golden, icon: "✨", name: "Golden Hour",
                                triggerDate: trigger, isTomorrow: false,
-                               color: Color(hex: 0x78350F)))
+                               color: Color(hex: 0x78350F),
+                               leadMinutes: nil))
         }
         if settings.blueHourAlertEnabled {
             let trigger = solar.sunset.map { $0.addingTimeInterval(20 * 60) }
             items.append(.init(kind: .blue, icon: "🔵", name: "Blue Hour",
                                triggerDate: trigger, isTomorrow: false,
-                               color: Color(hex: 0x1E3A5F)))
+                               color: Color(hex: 0x1E3A5F),
+                               leadMinutes: nil))
         }
         return items
     }
@@ -341,6 +346,13 @@ private struct ProAlertsCard: View {
                                     .foregroundStyle(.white)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.50)
+                                if let lead = alert.leadMinutes {
+                                    Text("Alert: \(lead) min before")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(.white.opacity(0.70))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.50)
+                                }
                                 if let cd = alert.triggerDate.flatMap({ countdown(to: $0, isTomorrow: alert.isTomorrow) }) {
                                     Text(cd)
                                         .font(.system(size: 15, weight: .semibold))

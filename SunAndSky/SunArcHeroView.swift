@@ -11,33 +11,45 @@ struct SunArcHeroView: View {
     let now:        Date
     let latitude:   Double
     let longitude:  Double
+    let placeName:  String
+
+    // Interaction (passed from ContentView)
+    let hasPinnedCoordinate: Bool
+    let isGeocoding:         Bool
+    let searchError:         String?
+    @Binding var isSearching: Bool
+    @Binding var searchText:  String
+    let onSearch:       () -> Void
+    let onClearPin:     () -> Void
+    let onCancel:       () -> Void
+    let onOpenSettings: () -> Void
 
     var body: some View {
         ZStack(alignment: .center) {
-            // ── Full sky arc canvas ────────────────────────────────────
-            if let solar {
-                SunArcView(
-                    altitude:   solar.altitude,
-                    azimuth:    solar.azimuth,
-                    cloudCover: cloudCover,
-                    solar:      solar,
-                    now:        now,
-                    latitude:   latitude,
-                    longitude:  longitude,
-                    use24Hour:  settings.use24HourTime
-                )
-            } else {
-                // Pre-location placeholder: deep night sky
-                Rectangle()
-                    .fill(LinearGradient(
-                        colors: [Color(hex: 0x020818), Color(hex: 0x0A1628)],
-                        startPoint: .top, endPoint: .bottom
-                    ))
+            // ── Full sky arc canvas (non-interactive) ──────────────────
+            Group {
+                if let solar {
+                    SunArcView(
+                        altitude:   solar.altitude,
+                        azimuth:    solar.azimuth,
+                        cloudCover: cloudCover,
+                        solar:      solar,
+                        now:        now,
+                        latitude:   latitude,
+                        longitude:  longitude,
+                        use24Hour:  settings.use24HourTime
+                    )
+                } else {
+                    Rectangle()
+                        .fill(LinearGradient(
+                            colors: [Color(hex: 0x020818), Color(hex: 0x0A1628)],
+                            startPoint: .top, endPoint: .bottom
+                        ))
+                }
             }
+            .allowsHitTesting(false)
 
-            // ── Title + tagline float in the sky zone ─────────────────
-            // Arc horizon is at 68% of height = ~204pt; sky centre ≈ 102pt.
-            // ZStack centre = 150pt → offset up ≈ 50pt to land in sky zone.
+            // ── Title + tagline in sky zone (non-interactive) ─────────
             VStack(spacing: 8) {
                 Text("Chase the Light")
                     .font(.system(size: 44, weight: .heavy, design: .default))
@@ -54,10 +66,126 @@ struct SunArcHeroView: View {
                     .padding(.horizontal, 32)
             }
             .offset(y: -50)
+            .allowsHitTesting(false)
+
+            // ── Interactive ground zone ────────────────────────────────
+            // Horizon at 68% = 204pt; ZStack centre = 150pt.
+            // Ground zone: 204–300pt (96pt). Centre at 252pt → offset +102.
+            groundContent
+                .frame(maxWidth: .infinity)
+                .frame(height: 96)
+                .offset(y: 102)
+                .animation(.spring(duration: 0.3), value: isSearching)
         }
         .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300)
         .clipped()
-        .allowsHitTesting(false)
+    }
+
+    // MARK: - Ground content
+
+    @ViewBuilder
+    private var groundContent: some View {
+        if isSearching {
+            searchBarInGround
+                .transition(.opacity)
+        } else {
+            VStack(spacing: 9) {
+                // ── Location name ─────────────────────────────────────
+                if !placeName.isEmpty {
+                    Text(placeName)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.65), radius: 4, x: 0, y: 2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.horizontal, 16)
+                }
+
+                // ── Search field + action buttons row ─────────────────
+                HStack(spacing: 8) {
+                    // Settings
+                    Button { onOpenSettings() } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(.white.opacity(0.78))
+                            .frame(width: 44, height: 44)
+                            .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    // Search field (tappable proxy)
+                    Button { searchText = ""; isSearching = true } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 17))
+                                .foregroundStyle(.white.opacity(0.55))
+                            Text("Search city or place…")
+                                .font(.system(size: 18))
+                                .foregroundStyle(.white.opacity(0.42))
+                            Spacer()
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 13)
+                        .frame(maxWidth: .infinity)
+                        .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+                    }
+
+                    // GPS / clear-pin
+                    Button { if hasPinnedCoordinate { onClearPin() } } label: {
+                        Image(systemName: hasPinnedCoordinate ? "location.fill" : "location")
+                            .font(.system(size: 22))
+                            .foregroundStyle(hasPinnedCoordinate
+                                ? Color(hex: 0x55BBFF)
+                                : .white.opacity(0.55))
+                            .frame(width: 44, height: 44)
+                            .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .transition(.opacity)
+        }
+    }
+
+    private var searchBarInGround: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 10) {
+                Image(systemName: isGeocoding ? "circle.dotted" : "magnifyingglass")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .symbolEffect(.rotate, isActive: isGeocoding)
+                TextField("Search city or place…", text: $searchText)
+                    .font(.system(size: 18))
+                    .foregroundStyle(.white).tint(.white)
+                    .submitLabel(.search).onSubmit { onSearch() }
+                    .autocorrectionDisabled()
+                if !searchText.isEmpty {
+                    Button { searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                }
+                Button("Cancel") { onCancel() }
+                    .foregroundStyle(.white)
+                    .font(.system(size: 17))
+            }
+            .padding(.horizontal, 16).padding(.vertical, 13)
+            .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal, 16)
+
+            if let error = searchError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.80))
+                    .padding(.horizontal, 24)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 
@@ -66,79 +194,20 @@ struct SunArcHeroView: View {
 struct LocationHeaderView: View {
     @EnvironmentObject private var settings: AppSettings
 
-    let solar:               SolarInfo?
-    let now:                 Date
-    let timeZone:            TimeZone?
-    let placeName:           String
-    let hasPinnedCoordinate: Bool
-    let isGeocoding:         Bool
-    let searchError:         String?
-    @Binding var isSearching: Bool
-    @Binding var searchText:  String
-    let onSearch:        () -> Void
-    let onClearPin:      () -> Void
-    let onCancel:        () -> Void
-    let onOpenSettings:  () -> Void
+    let solar:    SolarInfo?
+    let now:      Date
+    let timeZone: TimeZone?
 
     var body: some View {
         VStack(spacing: 8) {
-            if isSearching {
-                searchBar.transition(.move(edge: .top).combined(with: .opacity))
-            } else {
-                locationLabel.transition(.opacity)
-            }
-        }
-        .animation(.spring(duration: 0.3), value: isSearching)
-    }
-
-    // MARK: Location label
-
-    private var locationLabel: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 8) {
-                if !placeName.isEmpty {
-                    Text(placeName)
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.white)
-                }
-                Button {
-                    searchText = ""; isSearching = true
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.title3)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(8)
-                        .background(.white.opacity(0.15), in: Circle())
-                }
-                Button { onOpenSettings() } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title3)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .padding(8)
-                        .background(.white.opacity(0.15), in: Circle())
-                }
-            }
-
             Text(settings.timeString(now, timeZone: timeZone))
                 .font(.system(size: 36, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white)
             Text(localDateStr(now))
                 .font(.system(size: 17))
                 .foregroundStyle(.white.opacity(0.7))
-
             if let solar {
                 skyInfoPill(solar: solar)
-            }
-
-            if hasPinnedCoordinate {
-                Button { onClearPin() } label: {
-                    Label("Use my location", systemImage: "location.fill")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background(.white.opacity(0.2), in: Capsule())
-                }
-                .padding(.top, 2)
             }
         }
     }
@@ -193,36 +262,6 @@ struct LocationHeaderView: View {
         return String(format: "%dh %02dm", h, m)
     }
 
-    // MARK: Search bar
-
-    private var searchBar: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 10) {
-                Image(systemName: isGeocoding ? "circle.dotted" : "magnifyingglass")
-                    .foregroundStyle(.white.opacity(0.7))
-                    .symbolEffect(.rotate, isActive: isGeocoding)
-                TextField("Search city...", text: $searchText)
-                    .foregroundStyle(.white).tint(.white)
-                    .submitLabel(.search).onSubmit { onSearch() }
-                    .autocorrectionDisabled()
-                if !searchText.isEmpty {
-                    Button { searchText = "" } label: {
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.6))
-                    }
-                }
-                Button("Cancel") { onCancel() }
-                    .foregroundStyle(.white).font(.subheadline)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal, 24)
-
-            if let error = searchError {
-                Text(error).font(.caption).foregroundStyle(.white.opacity(0.8)).padding(.horizontal, 28)
-            }
-        }
-    }
-
     // MARK: Formatters
 
     private func localDateStr(_ date: Date) -> String {
@@ -231,10 +270,6 @@ struct LocationHeaderView: View {
         f.dateFormat = "EEEE, MMMM d"
         if let tz = timeZone { f.timeZone = tz }
         return f.string(from: date)
-    }
-
-    private func compassPoint(_ az: Double) -> String {
-        ["N","NE","E","SE","S","SW","W","NW"][Int((az + 22.5) / 45) % 8]
     }
 }
 

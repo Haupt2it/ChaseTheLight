@@ -53,21 +53,26 @@ struct ContentView: View {
             // ── Scrollable content ─────────────────────────────────────
             ScrollView {
                 VStack(spacing: 0) {
-                    if isSearching {
-                        header.padding(.top, 56)
-                    } else {
-                        SunArcHeroView(
-                            solar:      solar,
-                            cloudCover: cloudCover,
-                            now:        now,
-                            latitude:   activeCoordinate?.latitude  ?? 0,
-                            longitude:  activeCoordinate?.longitude ?? 0
-                        )
-                        .transition(.opacity)
-                        header
-                            .padding(.top, 16)
-                            .padding(.horizontal, 24)
-                    }
+                    SunArcHeroView(
+                        solar:               solar,
+                        cloudCover:          cloudCover,
+                        now:                 now,
+                        latitude:            activeCoordinate?.latitude  ?? 0,
+                        longitude:           activeCoordinate?.longitude ?? 0,
+                        placeName:           activePlaceName,
+                        hasPinnedCoordinate: pinnedCoordinate != nil,
+                        isGeocoding:         isGeocoding,
+                        searchError:         searchError,
+                        isSearching:         $isSearching,
+                        searchText:          $searchText,
+                        onSearch:            geocodeSearch,
+                        onClearPin:          clearPin,
+                        onCancel:            { isSearching = false; searchError = nil },
+                        onOpenSettings:      { showSettings = true }
+                    )
+                    header
+                        .padding(.top, 16)
+                        .padding(.horizontal, 24)
 
                     if let solar {
                         SunriseSunsetCard(
@@ -201,19 +206,9 @@ struct ContentView: View {
 
     private var header: some View {
         LocationHeaderView(
-            solar:               solar,
-            now:                 now,
-            timeZone:            activeTimeZone,
-            placeName:           activePlaceName,
-            hasPinnedCoordinate: pinnedCoordinate != nil,
-            isGeocoding:         isGeocoding,
-            searchError:         searchError,
-            isSearching:         $isSearching,
-            searchText:          $searchText,
-            onSearch:            geocodeSearch,
-            onClearPin:          clearPin,
-            onCancel:            { isSearching = false; searchError = nil },
-            onOpenSettings:      { showSettings = true }
+            solar:    solar,
+            now:      now,
+            timeZone: activeTimeZone
         )
     }
 
