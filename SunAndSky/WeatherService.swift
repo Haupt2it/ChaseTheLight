@@ -1,5 +1,7 @@
 import Foundation
 import Combine
+import CoreLocation
+import WeatherKit
 
 // MARK: - Light Quality
 
@@ -110,19 +112,30 @@ extension WeatherData {
 @MainActor
 final class WeatherService: ObservableObject {
 
-    @Published private(set) var weather: WeatherData?
-    @Published private(set) var fetchError: String?
+    @Published private(set) var weather:      WeatherData?
+    @Published private(set) var fetchError:   String?
+    @Published private(set) var activeSource: WeatherSource = .openMeteo
 
-    private var refreshTask: Task<Void, Never>?
+    private var refreshTask:  Task<Void, Never>?
+    private var storedLat:    Double        = 0
+    private var storedLon:    Double        = 0
+    private var storedSource: WeatherSource = .openMeteo
+    /// Incremented on every restart so stale in-flight fetches discard their results.
+    private var generation:   Int           = 0
 
-    func start(latitude: Double, longitude: Double) {
-        refreshTask?.cancel()
-        refreshTask = Task {
-            while !Task.isCancelled {
-                await fetch(latitude: latitude, longitude: longitude)
-                try? await Task.sleep(nanoseconds: 900_000_000_000) // 15 min
-            }
-        }
+    /// Start (or restart) continuous weather fetching for a location and source.
+    func start(latitude: Double, longitude: Double, source: WeatherSource = .openMeteo) {
+        storedLat    = latitude
+        storedLon    = longitude
+        storedSource = source
+        restartTask()
+    }
+
+    /// Switch source immediately and re-fetch without changing the location.
+    func changeSource(_ source: WeatherSource) {
+        guard storedLat != 0 || storedLon != 0 else { return }
+        storedSource = source
+        restartTask()
     }
 
     func stop() {
@@ -130,9 +143,44 @@ final class WeatherService: ObservableObject {
         refreshTask = nil
     }
 
-    // MARK: - Network
+    // MARK: - Task management
 
-    private func fetch(latitude: Double, longitude: Double) async {
+    private func restartTask() {
+        refreshTask?.cancel()
+        generation += 1
+        let gen = generation
+        refreshTask = Task {
+            while !Task.isCancelled {
+                await fetch(generation: gen)
+                try? await Task.sleep(nanoseconds: 900_000_000_000) // 15 min
+            }
+        }
+    }
+
+    // MARK: - Dispatch
+
+    /// Reads storedLat/Lon/Source at the moment of the call so it always uses
+    /// the latest values even if changeSource() was called mid-sleep.
+    private func fetch(generation gen: Int) async {
+        let lat = storedLat
+        let lon = storedLon
+        let src = storedSource
+        switch src {
+        case .openMeteo:  await fetchOpenMeteo(latitude: lat, longitude: lon, generation: gen)
+        case .weatherKit: await fetchWeatherKit(latitude: lat, longitude: lon, generation: gen)
+        case .nws:        await fetchNWS(latitude: lat, longitude: lon, generation: gen)
+        }
+    }
+
+    /// Only apply results if this fetch's generation still matches the current one.
+    private func applyIfCurrent(generation gen: Int, apply: () -> Void) {
+        guard gen == generation else { return }
+        apply()
+    }
+
+    // MARK: - Open-Meteo
+
+    private func fetchOpenMeteo(latitude: Double, longitude: Double, generation gen: Int) async {
         var comps = URLComponents(string: "https://api.open-meteo.com/v1/forecast")!
         comps.queryItems = [
             URLQueryItem(name: "latitude",      value: String(format: "%.4f", latitude)),
@@ -150,13 +198,12 @@ final class WeatherService: ObservableObject {
             let c         = decoded.current
             let h         = decoded.hourly
 
-            // Build 24 hourly snapshots; index == local hour 0–23
             let snapshots = zip(zip(h.cloud_cover, h.weather_code), h.temperature_2m).enumerated().map { i, pair in
                 let ((cc, wc), temp) = pair
                 return HourlySnapshot(hour: i, cloudCover: cc, weatherCode: wc, temperature: temp)
             }
 
-            weather = WeatherData(
+            let result = WeatherData(
                 cloudCover:      c.cloud_cover,
                 weatherCode:     c.weather_code,
                 visibility:      c.visibility,
@@ -165,14 +212,174 @@ final class WeatherService: ObservableObject {
                 windSpeed:       c.wind_speed_10m,
                 hourlySnapshots: snapshots
             )
-            fetchError = nil
+            applyIfCurrent(generation: gen) {
+                weather      = result
+                activeSource = .openMeteo
+                fetchError   = nil
+            }
         } catch {
-            fetchError = error.localizedDescription
+            applyIfCurrent(generation: gen) { fetchError = error.localizedDescription }
         }
+    }
+
+    // MARK: - WeatherKit
+    // NOTE: Requires the WeatherKit capability in your Apple Developer account and
+    // Xcode project (Signing & Capabilities → + → WeatherKit).
+    // Without the entitlement, calls fail and fall back to Open-Meteo.
+
+    private func fetchWeatherKit(latitude: Double, longitude: Double, generation gen: Int) async {
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        do {
+            let wk     = WeatherKit.WeatherService.shared
+            let result = try await wk.weather(for: location)
+            let cur    = result.currentWeather
+
+            let snapshots: [HourlySnapshot] = result.hourlyForecast.forecast.prefix(24).map { hour in
+                let h = Calendar.current.component(.hour, from: hour.date)
+                return HourlySnapshot(
+                    hour:        h,
+                    cloudCover:  hour.cloudCover * 100,
+                    weatherCode: wkConditionToWMO(hour.condition),
+                    temperature: hour.temperature.converted(to: .celsius).value
+                )
+            }
+
+            let wkData = WeatherData(
+                cloudCover:      cur.cloudCover * 100,
+                weatherCode:     wkConditionToWMO(cur.condition),
+                visibility:      cur.visibility.converted(to: .meters).value,
+                temperature:     cur.temperature.converted(to: .celsius).value,
+                humidity:        cur.humidity * 100,
+                windSpeed:       cur.wind.speed.converted(to: .kilometersPerHour).value,
+                hourlySnapshots: snapshots
+            )
+            applyIfCurrent(generation: gen) {
+                weather      = wkData
+                activeSource = .weatherKit
+                fetchError   = nil
+            }
+        } catch {
+            // Entitlement not configured or service unavailable — fall back to Open-Meteo
+            await fetchOpenMeteo(latitude: latitude, longitude: longitude, generation: gen)
+        }
+    }
+
+    // MARK: - NWS (US only)
+    // Falls back to Open-Meteo automatically for non-US coordinates.
+
+    private func fetchNWS(latitude: Double, longitude: Double, generation gen: Int) async {
+        do {
+            // Step 1 — resolve grid point
+            let pointURL = URL(string: "https://api.weather.gov/points/\(String(format: "%.4f,%.4f", latitude, longitude))")!
+            var pointReq = URLRequest(url: pointURL)
+            pointReq.setValue("(ChaseTheLight, support@chasethelight.app)", forHTTPHeaderField: "User-Agent")
+            let (pointData, _) = try await URLSession.shared.data(for: pointReq)
+            let pointResp      = try JSONDecoder().decode(NWSPointsResponse.self, from: pointData)
+
+            guard let forecastURL = URL(string: pointResp.properties.forecastHourly) else {
+                await fetchOpenMeteo(latitude: latitude, longitude: longitude, generation: gen); return
+            }
+
+            // Step 2 — hourly forecast
+            var fcReq = URLRequest(url: forecastURL)
+            fcReq.setValue("(ChaseTheLight, support@chasethelight.app)", forHTTPHeaderField: "User-Agent")
+            let (fcData, _) = try await URLSession.shared.data(for: fcReq)
+            let fcResp      = try JSONDecoder().decode(NWSHourlyResponse.self, from: fcData)
+
+            let periods = fcResp.properties.periods
+            guard let first = periods.first else {
+                await fetchOpenMeteo(latitude: latitude, longitude: longitude, generation: gen); return
+            }
+
+            // Build hourly snapshots
+            let isoFmt  = ISO8601DateFormatter()
+            let snapshots: [HourlySnapshot] = periods.prefix(24).compactMap { period in
+                let date = isoFmt.date(from: period.startTime)
+                let h    = date.map { Calendar.current.component(.hour, from: $0) } ?? 0
+                let (cc, wc) = nwsForecastToWeather(period.shortForecast)
+                return HourlySnapshot(
+                    hour:        h,
+                    cloudCover:  cc,
+                    weatherCode: wc,
+                    temperature: nwsToCelsius(period.temperature, unit: period.temperatureUnit)
+                )
+            }
+
+            let (cloudCover, wmoCode) = nwsForecastToWeather(first.shortForecast)
+            let windKph: Double = {
+                let parts = first.windSpeed.components(separatedBy: " ")
+                return (Double(parts.first ?? "0") ?? 0) * 1.60934
+            }()
+
+            let nwsData = WeatherData(
+                cloudCover:      cloudCover,
+                weatherCode:     wmoCode,
+                visibility:      16093,   // NWS hourly doesn't report visibility; default 10 mi
+                temperature:     nwsToCelsius(first.temperature, unit: first.temperatureUnit),
+                humidity:        first.relativeHumidity?.value ?? 50,
+                windSpeed:       windKph,
+                hourlySnapshots: snapshots
+            )
+            applyIfCurrent(generation: gen) {
+                weather      = nwsData
+                activeSource = .nws
+                fetchError   = nil
+            }
+        } catch {
+            // NWS is US-only; non-US or network errors fall back to Open-Meteo
+            await fetchOpenMeteo(latitude: latitude, longitude: longitude, generation: gen)
+        }
+    }
+
+    // MARK: - WeatherKit condition → WMO code
+
+    private func wkConditionToWMO(_ condition: WeatherCondition) -> Int {
+        switch condition {
+        case .clear:                                          return 0
+        case .mostlyClear:                                   return 1
+        case .partlyCloudy, .breezy, .windy, .hot, .frigid: return 2
+        case .mostlyCloudy, .cloudy:                         return 3
+        case .foggy, .haze, .smoky, .blowingDust:           return 45
+        case .drizzle, .freezingDrizzle:                    return 51
+        case .rain, .sunShowers:                             return 61
+        case .heavyRain:                                     return 65
+        case .flurries, .sunFlurries:                        return 71
+        case .snow, .blowingSnow:                            return 73
+        case .heavySnow, .blizzard:                          return 75
+        case .sleet, .wintryMix, .freezingRain:             return 77
+        case .hail:                                          return 96
+        case .isolatedThunderstorms, .scatteredThunderstorms: return 95
+        case .thunderstorms, .strongStorms,
+             .tropicalStorm, .hurricane:                     return 99
+        @unknown default:                                    return 2
+        }
+    }
+
+    // MARK: - NWS helpers
+
+    private func nwsToCelsius(_ temp: Double, unit: String) -> Double {
+        unit.uppercased() == "F" ? (temp - 32) * 5 / 9 : temp
+    }
+
+    private func nwsForecastToWeather(_ forecast: String) -> (cloudCover: Double, wmoCode: Int) {
+        let f = forecast.lowercased()
+        if f.contains("thunderstorm")                              { return (90, 95) }
+        if f.contains("heavy rain") || f.contains("heavy shower") { return (85, 65) }
+        if f.contains("rain") || f.contains("shower") || f.contains("drizzle") { return (75, 61) }
+        if f.contains("heavy snow") || f.contains("blizzard")     { return (85, 75) }
+        if f.contains("snow") || f.contains("flurries")           { return (75, 71) }
+        if f.contains("sleet") || f.contains("wintry") || f.contains("freezing") { return (80, 77) }
+        if f.contains("fog") || f.contains("mist")                { return (80, 45) }
+        if f.contains("overcast")                                  { return (95, 3)  }
+        if f.contains("mostly cloudy")                             { return (75, 3)  }
+        if f.contains("partly cloudy") || f.contains("partly sunny") || f.contains("increasing clouds") { return (40, 2) }
+        if f.contains("mostly clear") || f.contains("mostly sunny") { return (15, 1) }
+        if f.contains("clear") || f.contains("sunny") || f.contains("fair") { return (5, 0) }
+        return (50, 2)
     }
 }
 
-// MARK: - JSON model
+// MARK: - Open-Meteo JSON models
 
 private struct OpenMeteoResponse: Decodable {
     struct Current: Decodable {
@@ -190,6 +397,34 @@ private struct OpenMeteoResponse: Decodable {
     }
     let current: Current
     let hourly:  Hourly
+}
+
+// MARK: - NWS JSON models
+
+private struct NWSPointsResponse: Decodable {
+    struct Properties: Decodable {
+        let forecastHourly: String
+    }
+    let properties: Properties
+}
+
+private struct NWSHourlyResponse: Decodable {
+    struct Properties: Decodable {
+        struct Period: Decodable {
+            let startTime:         String
+            let temperature:       Double
+            let temperatureUnit:   String
+            let windSpeed:         String
+            let shortForecast:     String
+            let relativeHumidity:  NWSValue?
+        }
+        let periods: [Period]
+    }
+    let properties: Properties
+}
+
+private struct NWSValue: Decodable {
+    let value: Double?
 }
 
 // MARK: - Shared WMO helpers (used by WeatherData and HourlySnapshot)

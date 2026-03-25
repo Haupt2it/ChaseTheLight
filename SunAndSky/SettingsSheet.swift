@@ -7,6 +7,8 @@ struct SettingsSheet: View {
     @EnvironmentObject var proManager: ProManager
     @Environment(\.dismiss) private var dismiss
 
+    var scrollToWeather: Bool = false
+
     @State private var showUpgrade              = false
     @State private var showNotificationSettings = false
 
@@ -15,6 +17,7 @@ struct SettingsSheet: View {
             ZStack {
                 Color(hex: 0x0A1628).ignoresSafeArea()
 
+                ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
 
@@ -41,6 +44,47 @@ struct SettingsSheet: View {
                                 isOn:   $settings.useCelsius
                             )
                         }
+
+                        // ── Pro Weather ───────────────────────────────
+                        SettingsCard(title: "Pro Weather", icon: "cloud.sun.fill") {
+                            if proManager.isPro {
+                                VStack(alignment: .leading, spacing: 14) {
+                                    Picker("Source", selection: $settings.weatherSource) {
+                                        ForEach(WeatherSource.allCases) { source in
+                                            Text(source.pickerLabel).tag(source)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+
+                                    Text(settings.weatherSource.sourceDescription)
+                                        .font(.system(size: 15))
+                                        .foregroundStyle(.white.opacity(0.55))
+                                }
+                            } else {
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Open-Meteo (default)")
+                                            .font(.system(size: 17, weight: .medium))
+                                            .foregroundStyle(.white)
+                                        Text("Switch to WeatherKit or NWS with Pro")
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(.white.opacity(0.55))
+                                    }
+                                    Spacer()
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "lock.fill")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(Color(hex: 0xFFBB00))
+                                        Text("PRO")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundStyle(Color(hex: 0xFFBB00))
+                                    }
+                                    .padding(.horizontal, 9).padding(.vertical, 4)
+                                    .background(Color(hex: 0xFFBB00).opacity(0.14), in: Capsule())
+                                }
+                            }
+                        }
+                        .id("weatherSource")
 
                         // ── Satellite Region ──────────────────────────
                         SettingsCard(title: "Satellite Image Region", icon: "globe.americas.fill") {
@@ -84,6 +128,14 @@ struct SettingsSheet: View {
                     .padding(.top, 8)
                     .padding(.bottom, 48)
                 }
+                .onAppear {
+                    if scrollToWeather {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            withAnimation { proxy.scrollTo("weatherSource", anchor: .top) }
+                        }
+                    }
+                }
+                } // ScrollViewReader
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)

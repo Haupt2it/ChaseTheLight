@@ -1,6 +1,48 @@
 import Foundation
 import Combine
 
+// MARK: - WeatherSource
+
+enum WeatherSource: String, CaseIterable, Identifiable {
+    case openMeteo  = "Open-Meteo"
+    case weatherKit = "WeatherKit"
+    case nws        = "NWS"
+
+    var id: String { rawValue }
+
+    var pickerLabel: String {
+        switch self {
+        case .openMeteo:  return "Open-Meteo"
+        case .weatherKit: return "WeatherKit"
+        case .nws:        return "NWS"
+        }
+    }
+
+    var sourceDescription: String {
+        switch self {
+        case .openMeteo:  return "Free global model · open-meteo.com"
+        case .weatherKit: return "Apple · most accurate, requires WeatherKit entitlement"
+        case .nws:        return "NOAA/NWS · US locations only, official US government data"
+        }
+    }
+
+    var attributionLabel: String {
+        switch self {
+        case .openMeteo:  return "Weather: Open-Meteo"
+        case .weatherKit: return "Weather: Apple WeatherKit"
+        case .nws:        return "Weather: NWS / weather.gov"
+        }
+    }
+
+    var attributionURL: URL {
+        switch self {
+        case .openMeteo:  return URL(string: "https://open-meteo.com")!
+        case .weatherKit: return URL(string: "https://developer.apple.com/weatherkit/")!
+        case .nws:        return URL(string: "https://www.weather.gov")!
+        }
+    }
+}
+
 // MARK: - SatelliteRegion
 
 enum SatelliteRegion: String, CaseIterable, Identifiable {
@@ -63,6 +105,9 @@ final class AppSettings: ObservableObject {
     @Published var satelliteRegion: SatelliteRegion {
         didSet { UserDefaults.standard.set(satelliteRegion.rawValue, forKey: Keys.satelliteRegion) }
     }
+    @Published var weatherSource: WeatherSource {
+        didSet { UserDefaults.standard.set(weatherSource.rawValue, forKey: Keys.weatherSource) }
+    }
     @Published var showSatelliteCard: Bool {
         didSet { UserDefaults.standard.set(showSatelliteCard, forKey: Keys.showSatelliteCard) }
     }
@@ -99,6 +144,8 @@ final class AppSettings: ObservableObject {
         useCelsius      = ud.bool(forKey: Keys.useCelsius)      // false = °F by default
         satelliteRegion = SatelliteRegion(
             rawValue: ud.string(forKey: Keys.satelliteRegion) ?? "") ?? .americas
+        weatherSource = WeatherSource(
+            rawValue: ud.string(forKey: Keys.weatherSource) ?? "") ?? .openMeteo
         // Bool keys default false — use object check so these default to true on first launch
         showSatelliteCard = ud.object(forKey: Keys.showSatelliteCard) as? Bool ?? true
         showForecastStrip = ud.object(forKey: Keys.showForecastStrip) as? Bool ?? true
@@ -146,6 +193,7 @@ final class AppSettings: ObservableObject {
         static let use24HourTime   = "use24HourTime"
         static let useCelsius      = "useCelsius"
         static let satelliteRegion = "satelliteRegion"
+        static let weatherSource           = "weatherSource"
         static let showSatelliteCard       = "showSatelliteCard"
         static let showForecastStrip       = "showForecastStrip"
         static let sunriseAlertEnabled     = "sunriseAlertEnabled"

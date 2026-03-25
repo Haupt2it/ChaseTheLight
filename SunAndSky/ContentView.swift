@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var searchError:  String?
     @State private var isGeocoding   = false
     @State private var showSettings              = false
+    @State private var settingsScrollToWeather   = false
     @State private var showUpgrade               = false
     @State private var showNotificationSettings  = false
     @State private var showProToast              = false
@@ -117,7 +118,13 @@ struct ContentView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, 24)
                                 .padding(.top, 16)
-                            CurrentConditionsCard(weather: weather, solar: solar, timeZone: activeTimeZone)
+                            CurrentConditionsCard(
+                                weather:     weather,
+                                solar:       solar,
+                                timeZone:    activeTimeZone,
+                                source:      weatherService.activeSource,
+                                onSourceTap: { settingsScrollToWeather = true; showSettings = true }
+                            )
                                 .padding(.top, 6)
                                 .padding(.horizontal, 24)
                         }
@@ -173,9 +180,10 @@ struct ContentView: View {
             satelliteService.start(imageURL: region.imageURL)
         }
         .sheet(isPresented: $showSettings) {
-            SettingsSheet()
+            SettingsSheet(scrollToWeather: settingsScrollToWeather)
                 .environmentObject(settings)
                 .environmentObject(proManager)
+                .onDisappear { settingsScrollToWeather = false }
         }
         .sheet(isPresented: $showUpgrade) {
             UpgradeSheet().environmentObject(proManager)
@@ -186,7 +194,12 @@ struct ContentView: View {
         .onReceive(location.$coordinate) { coord in
             guard pinnedCoordinate == nil, let coord else { return }
             recalculate(coord: coord)
-            weatherService.start(latitude: coord.latitude, longitude: coord.longitude)
+            let source = proManager.isPro ? settings.weatherSource : .openMeteo
+            weatherService.start(latitude: coord.latitude, longitude: coord.longitude, source: source)
+        }
+        .onChange(of: settings.weatherSource) { _, source in
+            let active = proManager.isPro ? source : .openMeteo
+            weatherService.changeSource(active)
         }
         .onReceive(timer) { date in
             now = date
@@ -254,7 +267,8 @@ struct ContentView: View {
                 locationTimeZone = item.timeZone as TimeZone?
                 isSearching = false; searchText = ""
                 recalculate(coord: loc.coordinate)
-                weatherService.start(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
+                let source = proManager.isPro ? settings.weatherSource : .openMeteo
+                weatherService.start(latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude, source: source)
             } catch {
                 isGeocoding = false
                 searchError = "Could not find \"\(query)\": \(error.localizedDescription)"
@@ -266,7 +280,8 @@ struct ContentView: View {
         pinnedCoordinate = nil; pinnedPlaceName = ""; locationTimeZone = nil
         recalculate(coord: location.coordinate)
         if let c = location.coordinate {
-            weatherService.start(latitude: c.latitude, longitude: c.longitude)
+            let source = proManager.isPro ? settings.weatherSource : .openMeteo
+            weatherService.start(latitude: c.latitude, longitude: c.longitude, source: source)
         }
     }
 
