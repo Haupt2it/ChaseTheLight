@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CC11AA000000000000000010 /* Chase the Light Watch.app in Embed Watch Content */ = {
+			isa = PBXBuildFile;
+			fileRef = CC11AA000000000000000001 /* Chase the Light Watch.app */;
+			settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); };
+		};
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BEE8EA422F71CEB400F17C96 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,7 +29,28 @@
 			remoteGlobalIDString = BEE8EA332F71CEB300F17C96;
 			remoteInfo = SunAndSky;
 		};
+		CC11AA000000000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BEE8EA2C2F71CEB300F17C96 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC11AA000000000000000006;
+			remoteInfo = "Chase the Light Watch";
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BE162D6A2F74B33700B14972 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				CC11AA000000000000000010 /* Chase the Light Watch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		BEE8EA342F71CEB300F17C96 /* SunAndSky.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SunAndSky.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,7 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				BEE8EA362F71CEB300F17C96 /* SunAndSky */,
-			CC11AA000000000000000002 /* ChaseTheLightWatch */,
+				CC11AA000000000000000002 /* ChaseTheLightWatch */,
 				BEE8EA442F71CEB400F17C96 /* SunAndSkyTests */,
 				BEE8EA4E2F71CEB400F17C96 /* SunAndSkyUITests */,
 				BEE8EA352F71CEB300F17C96 /* Products */,
@@ -102,7 +131,7 @@
 				BEE8EA342F71CEB300F17C96 /* SunAndSky.app */,
 				BEE8EA412F71CEB400F17C96 /* SunAndSkyTests.xctest */,
 				BEE8EA4B2F71CEB400F17C96 /* SunAndSkyUITests.xctest */,
-			CC11AA000000000000000001 /* Chase the Light Watch.app */,
+				CC11AA000000000000000001 /* Chase the Light Watch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -117,10 +146,12 @@
 				BEE8EA302F71CEB300F17C96 /* Sources */,
 				BEE8EA312F71CEB300F17C96 /* Frameworks */,
 				BEE8EA322F71CEB300F17C96 /* Resources */,
+				BE162D6A2F74B33700B14972 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CC11AA000000000000000013 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				BEE8EA362F71CEB300F17C96 /* SunAndSky */,
@@ -208,7 +239,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2630;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					BEE8EA332F71CEB300F17C96 = {
 						CreatedOnToolsVersion = 26.3;
@@ -218,10 +249,10 @@
 						TestTargetID = BEE8EA332F71CEB300F17C96;
 					};
 					BEE8EA4A2F71CEB400F17C96 = {
-				CreatedOnToolsVersion = 26.3;
-				TestTargetID = BEE8EA332F71CEB300F17C96;
-			};
-				CC11AA000000000000000006 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = BEE8EA332F71CEB300F17C96;
+					};
+					CC11AA000000000000000006 = {
 						CreatedOnToolsVersion = 26.3;
 						TestTargetID = BEE8EA332F71CEB300F17C96;
 					};
@@ -244,7 +275,7 @@
 				BEE8EA332F71CEB300F17C96 /* SunAndSky */,
 				BEE8EA402F71CEB400F17C96 /* SunAndSkyTests */,
 				BEE8EA4A2F71CEB400F17C96 /* SunAndSkyUITests */,
-			CC11AA000000000000000006 /* Chase the Light Watch */,
+				CC11AA000000000000000006 /* Chase the Light Watch */,
 			);
 		};
 /* End PBXProject section */
@@ -322,6 +353,11 @@
 			target = BEE8EA332F71CEB300F17C96 /* SunAndSky */;
 			targetProxy = BEE8EA4C2F71CEB400F17C96 /* PBXContainerItemProxy */;
 		};
+		CC11AA000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC11AA000000000000000006 /* Chase the Light Watch */;
+			targetProxy = CC11AA000000000000000012 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -384,6 +420,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -441,6 +478,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -611,9 +649,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chase the Light";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.Haupt2it.ChaseTheLight";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.Haupt2it.ChaseTheLight;
 				MARKETING_VERSION = 1.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.Haupt2it.ChaseTheLight.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.Haupt2it.ChaseTheLight.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -639,9 +677,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chase the Light";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.Haupt2it.ChaseTheLight";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.Haupt2it.ChaseTheLight;
 				MARKETING_VERSION = 1.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.Haupt2it.ChaseTheLight.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = com.Haupt2it.ChaseTheLight.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
