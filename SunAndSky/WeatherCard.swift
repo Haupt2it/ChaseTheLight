@@ -5,11 +5,10 @@ import SwiftUI
 struct CurrentConditionsCard: View {
     @EnvironmentObject private var settings: AppSettings
 
-    let weather:     WeatherData
-    let solar:       SolarInfo?
-    let timeZone:    TimeZone?
-    let source:      WeatherSource
-    let onSourceTap: () -> Void
+    let weather:  WeatherData
+    let solar:    SolarInfo?
+    let timeZone: TimeZone?
+    let source:   WeatherSource
 
     var body: some View {
         VStack(spacing: 0) {
@@ -70,20 +69,6 @@ struct CurrentConditionsCard: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
 
-            // ── Attribution (tappable → opens Settings) ──────────────
-            Divider().overlay(.white.opacity(0.12)).padding(.horizontal, 14)
-            Button(action: onSourceTap) {
-                HStack(spacing: 4) {
-                    Text(source.attributionLabel)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.white.opacity(0.38))
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.28))
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 8)
-            }
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.2), lineWidth: 1))

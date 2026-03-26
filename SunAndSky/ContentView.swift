@@ -122,14 +122,36 @@ struct ContentView: View {
                                 .padding(.horizontal, 24)
                                 .padding(.top, 16)
                             CurrentConditionsCard(
-                                weather:     weather,
-                                solar:       solar,
-                                timeZone:    activeTimeZone,
-                                source:      weatherService.activeSource,
-                                onSourceTap: { settingsScrollToWeather = true; showSettings = true }
+                                weather:  weather,
+                                solar:    solar,
+                                timeZone: activeTimeZone,
+                                source:   weatherService.activeSource
                             )
-                                .padding(.top, 6)
-                                .padding(.horizontal, 24)
+                            .padding(.top, 6)
+                            .padding(.horizontal, 24)
+
+                            Button(action: {
+                                print("WEATHER TAPPED")
+                                settingsScrollToWeather = true
+                                showSettings = true
+                            }) {
+                                HStack {
+                                    Spacer()
+                                    Image(systemName: "cloud.fill")
+                                        .foregroundColor(.white.opacity(0.5))
+                                    Text("Weather: \(settings.weatherSource.rawValue)")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.white.opacity(0.5))
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.white.opacity(0.4))
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .padding(.horizontal, 16)
                         }
 
 
