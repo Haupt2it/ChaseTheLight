@@ -1,11 +1,12 @@
 import Foundation
 import Combine
 import StoreKit
+import WatchConnectivity
 
 // MARK: - ProManager
 
 @MainActor
-final class ProManager: ObservableObject {
+final class ProManager: NSObject, ObservableObject {
 
     static let productID = "com.Haupt2it.ChaseTheLight.pro"
 
@@ -17,13 +18,15 @@ final class ProManager: ObservableObject {
     // nonisolated(unsafe) lets deinit cancel the task without actor-isolation errors
     nonisolated(unsafe) private var updateListener: Task<Void, Never>?
 
-    init() {
+    override init() {
         isPro = UserDefaults.standard.bool(forKey: "proUnlocked")
+        super.init()
         updateListener = makeTransactionListener()
         Task {
             await loadProduct()
             await verifyEntitlements()
         }
+        setupWatchConnectivity()
     }
 
     deinit {
@@ -114,6 +117,51 @@ final class ProManager: ObservableObject {
     private func setPro(_ value: Bool) {
         isPro = value
         UserDefaults.standard.set(value, forKey: "proUnlocked")
+        syncToWatch()
+    }
+
+    // MARK: - WatchConnectivity
+
+    private func setupWatchConnectivity() {
+        guard WCSession.isSupported() else { return }
+        WCSession.default.delegate = self
+        WCSession.default.activate()
+    }
+
+    /// Push current Pro status and alert settings to the watch.
+    func syncToWatch() {
+        guard WCSession.isSupported(),
+              WCSession.default.activationState == .activated,
+              WCSession.default.isWatchAppInstalled else { return }
+
+        let ud = UserDefaults.standard
+        let ctx: [String: Any] = [
+            "isPro":                    isPro,
+            "sunriseAlertEnabled":      ud.bool(forKey: "sunriseAlertEnabled"),
+            "sunriseLeadMinutes":       ud.object(forKey: "sunriseLeadMinutes") as? Int ?? 15,
+            "sunsetAlertEnabled":       ud.bool(forKey: "sunsetAlertEnabled"),
+            "sunsetLeadMinutes":        ud.object(forKey: "sunsetLeadMinutes") as? Int ?? 15,
+            "goldenHourAlertEnabled":   ud.bool(forKey: "goldenHourAlertEnabled"),
+            "blueHourAlertEnabled":     ud.bool(forKey: "blueHourAlertEnabled"),
+        ]
+        try? WCSession.default.updateApplicationContext(ctx)
+    }
+}
+
+// MARK: - WCSessionDelegate
+
+extension ProManager: WCSessionDelegate {
+    nonisolated func session(_ session: WCSession,
+                             activationDidCompleteWith state: WCSessionActivationState,
+                             error: Error?) {
+        if state == .activated {
+            Task { @MainActor in self.syncToWatch() }
+        }
+    }
+
+    nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
+    nonisolated func sessionDidDeactivate(_ session: WCSession) {
+        WCSession.default.activate()
     }
 }
 

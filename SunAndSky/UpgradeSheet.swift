@@ -76,6 +76,9 @@ struct UpgradeSheet: View {
 
                     // ── Feature list ─────────────────────────────────────
                     VStack(alignment: .leading, spacing: 18) {
+                        UpgradeFeatureRow(text: "Apple Watch app with live sun tracking")
+                        UpgradeFeatureRow(text: "Glanceable light phase countdowns on your wrist")
+                        UpgradeFeatureRow(text: "Haptic alerts for golden hour & blue hour on your wrist")
                         UpgradeFeatureRow(text: "Departure reminders for sunrise & sunset")
                         UpgradeFeatureRow(text: "Golden Hour & Blue Hour alerts")
                         UpgradeFeatureRow(text: "Custom lead time — set how early to leave")

@@ -72,6 +72,15 @@ Know every light phase before you leave the house. Real-time sun tracking + live
 satellite imagery for photographers chasing perfect light.
 
 
+WHAT'S NEW (Version 1.1.0)
+---------------------------
+• Apple Watch app — live sun tracking, light phase schedule, and haptic alerts on your wrist (Pro)
+• Complete Alerts redesign with horizontal pill layout and lead time display
+• Light Phase detail sheets with photography tips for each phase
+• Weather source selection — Open-Meteo, WeatherKit, or NWS (Pro)
+• Refined title typography and arc hero layout
+• Improved performance and stability
+
 WHAT'S NEW (Version 1.0.0)
 ---------------------------
 Welcome to Chase the Light! This is the initial release.
