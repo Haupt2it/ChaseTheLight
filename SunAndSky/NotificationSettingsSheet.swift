@@ -4,10 +4,9 @@ import UserNotifications
 // MARK: - NotificationSettingsSheet
 
 struct NotificationSettingsSheet: View {
-    @EnvironmentObject private var appSettings: AppSettings
+    @EnvironmentObject private var appSettings:         AppSettings
+    @EnvironmentObject private var notificationManager: NotificationManager
     @Environment(\.dismiss) private var dismiss
-
-    @State private var authStatus: UNAuthorizationStatus = .notDetermined
 
     private let leadOptions = [5, 10, 15, 20, 30, 45, 60]
 
@@ -19,49 +18,57 @@ struct NotificationSettingsSheet: View {
                 ScrollView {
                     VStack(spacing: 16) {
 
-                        if authStatus == .denied {
+                        // ── Permission denied banner ────────────────────
+                        if notificationManager.authorizationStatus == .denied {
                             deniedBanner
                         }
 
-                        // ── Sunrise ────────────────────────────────────
+                        // ── Sunrise ─────────────────────────────────────
                         alertCard(
                             title:       "Sunrise",
                             subtitle:    "Alert before sunrise begins",
                             icon:        "sunrise.fill",
                             iconColor:   Color(hex: 0xFF8800),
                             isEnabled:   $appSettings.sunriseAlertEnabled,
-                            leadMinutes: $appSettings.sunriseLeadMinutes
+                            leadMinutes: $appSettings.sunriseLeadMinutes,
+                            nextDate:    notificationManager.nextSunriseAlert
                         )
 
-                        // ── Sunset ─────────────────────────────────────
+                        // ── Sunset ──────────────────────────────────────
                         alertCard(
                             title:       "Sunset",
                             subtitle:    "Alert before sunset begins",
                             icon:        "sunset.fill",
                             iconColor:   Color(hex: 0xFF5500),
                             isEnabled:   $appSettings.sunsetAlertEnabled,
-                            leadMinutes: $appSettings.sunsetLeadMinutes
+                            leadMinutes: $appSettings.sunsetLeadMinutes,
+                            nextDate:    notificationManager.nextSunsetAlert
                         )
 
-                        // ── Golden Hour ────────────────────────────────
+                        // ── Golden Hour ─────────────────────────────────
                         simpleAlertCard(
                             title:     "Golden Hour",
                             subtitle:  "When warm golden light begins",
                             icon:      "sun.horizon.fill",
                             iconColor: Color(hex: 0xFFBB00),
-                            isEnabled: $appSettings.goldenHourAlertEnabled
+                            isEnabled: $appSettings.goldenHourAlertEnabled,
+                            nextDate:  notificationManager.nextGoldenAlert
                         )
 
-                        // ── Blue Hour ──────────────────────────────────
+                        // ── Blue Hour ───────────────────────────────────
                         simpleAlertCard(
                             title:     "Blue Hour",
                             subtitle:  "When cool twilight blue begins",
                             icon:      "moon.stars.fill",
                             iconColor: Color(hex: 0x5599FF),
-                            isEnabled: $appSettings.blueHourAlertEnabled
+                            isEnabled: $appSettings.blueHourAlertEnabled,
+                            nextDate:  notificationManager.nextBlueAlert
                         )
 
                         travelTimeTip
+
+                        // ── Test notification ───────────────────────────
+                        testSection
 
                         Spacer().frame(height: 16)
                     }
@@ -81,15 +88,16 @@ struct NotificationSettingsSheet: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .preferredColorScheme(.dark)
         }
-        .task { await refreshAuthStatus() }
+        .task { await notificationManager.refreshAuthStatus() }
     }
 
-    // MARK: - Alert card with lead time picker
+    // MARK: - Alert card with lead time
 
     private func alertCard(
         title: String, subtitle: String,
         icon: String, iconColor: Color,
-        isEnabled: Binding<Bool>, leadMinutes: Binding<Int>
+        isEnabled: Binding<Bool>, leadMinutes: Binding<Int>,
+        nextDate: Date?
     ) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
@@ -110,7 +118,7 @@ struct NotificationSettingsSheet: View {
                     get: { isEnabled.wrappedValue },
                     set: { val in
                         isEnabled.wrappedValue = val
-                        if val { Task { await requestPermission() } }
+                        if val { Task { _ = await notificationManager.requestAuthorization() } }
                     }
                 ))
                 .labelsHidden()
@@ -140,6 +148,22 @@ struct NotificationSettingsSheet: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+
+                if let next = nextDate {
+                    Divider()
+                        .overlay(.white.opacity(0.08))
+                        .padding(.horizontal, 16)
+                    HStack(spacing: 6) {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(iconColor.opacity(0.7))
+                        Text("Next: \(nextAlertLabel(next))")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.50))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                }
             }
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
@@ -152,37 +176,89 @@ struct NotificationSettingsSheet: View {
     private func simpleAlertCard(
         title: String, subtitle: String,
         icon: String, iconColor: Color,
-        isEnabled: Binding<Bool>
+        isEnabled: Binding<Bool>,
+        nextDate: Date?
     ) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 22))
-                .foregroundStyle(iconColor)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(.white)
-                Text(subtitle)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.white.opacity(0.55))
-            }
-            Spacer()
-            Toggle("", isOn: Binding(
-                get: { isEnabled.wrappedValue },
-                set: { val in
-                    isEnabled.wrappedValue = val
-                    if val { Task { await requestPermission() } }
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                    .foregroundStyle(iconColor)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Text(subtitle)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.white.opacity(0.55))
                 }
-            ))
-            .labelsHidden()
-            .tint(iconColor)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { isEnabled.wrappedValue },
+                    set: { val in
+                        isEnabled.wrappedValue = val
+                        if val { Task { _ = await notificationManager.requestAuthorization() } }
+                    }
+                ))
+                .labelsHidden()
+                .tint(iconColor)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+
+            if isEnabled.wrappedValue, let next = nextDate {
+                Divider()
+                    .overlay(.white.opacity(0.08))
+                    .padding(.horizontal, 16)
+                HStack(spacing: 6) {
+                    Image(systemName: "bell.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(iconColor.opacity(0.7))
+                    Text("Next: \(nextAlertLabel(next))")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.white.opacity(0.50))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.10), lineWidth: 1))
         .environment(\.colorScheme, .dark)
+    }
+
+    // MARK: - Test section
+
+    private var testSection: some View {
+        VStack(spacing: 12) {
+            Button {
+                Task { await notificationManager.scheduleTest() }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "bell.badge.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(Color(hex: 0xFFBB00))
+                    Text("Send Test Notification")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 15)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(
+                    Color(hex: 0xFFBB00).opacity(0.35), lineWidth: 1))
+                .contentShape(RoundedRectangle(cornerRadius: 18))
+            }
+            .buttonStyle(.plain)
+            .disabled(notificationManager.authorizationStatus != .authorized)
+            .opacity(notificationManager.authorizationStatus == .authorized ? 1 : 0.45)
+
+            Text("Fires in 5 seconds — leave the app to see it as a banner")
+                .font(.system(size: 13))
+                .foregroundStyle(.white.opacity(0.40))
+                .multilineTextAlignment(.center)
+        }
     }
 
     // MARK: - Denied banner
@@ -233,16 +309,18 @@ struct NotificationSettingsSheet: View {
         .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
     }
 
-    // MARK: - Permission helpers
+    // MARK: - Date formatting helper
 
-    private func refreshAuthStatus() async {
-        let current = await UNUserNotificationCenter.current().notificationSettings()
-        authStatus = current.authorizationStatus
-    }
-
-    private func requestPermission() async {
-        let granted = (try? await UNUserNotificationCenter.current()
-            .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
-        authStatus = granted ? .authorized : .denied
+    private func nextAlertLabel(_ date: Date) -> String {
+        let cal = Calendar.current
+        let tf  = DateFormatter()
+        tf.timeStyle = .short
+        tf.dateStyle = .none
+        let time = tf.string(from: date)
+        if cal.isDateInToday(date)    { return "Today at \(time)" }
+        if cal.isDateInTomorrow(date) { return "Tomorrow at \(time)" }
+        let df = DateFormatter()
+        df.dateFormat = "EEEE"
+        return "\(df.string(from: date)) at \(time)"
     }
 }

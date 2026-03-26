@@ -334,7 +334,7 @@ private struct PhaseGridCell: View {
     @ViewBuilder
     private var timeBubble: some View {
         Button {
-            withAnimation(.easeInOut(duration: 0.2)) { onDisplayModeChange((displayMode + 1) % 3) }
+            withAnimation(.easeInOut(duration: 0.2)) { onDisplayModeChange((displayMode + 1) % 4) }
         } label: {
             HStack(spacing: 4) {
                 bubbleLabel
@@ -369,6 +369,8 @@ private struct PhaseGridCell: View {
             Text("\(dur) min")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
+        } else if displayMode == 3 {
+            countdownLabel
         } else if isActive {
             Text("NOW")
                 .font(.system(size: 24, weight: .black, design: .rounded))
@@ -379,6 +381,46 @@ private struct PhaseGridCell: View {
             Text(h > 0 ? "\(h)h \(m)m" : "\(m)m")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
+        } else {
+            Image(systemName: "checkmark")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.white.opacity(0.30))
+        }
+    }
+
+    // MARK: Countdown label (STATE 4 — live seconds)
+
+    @ViewBuilder
+    private var countdownLabel: some View {
+        if isActive, let w = displayWindow {
+            let secs = Int(max(0, w.end.timeIntervalSince(now)))
+            let m = secs / 60; let s = secs % 60
+            let label = m > 0 ? "Ends in \(m)m \(s)s" : "Ends in \(s)s"
+            Text(label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        } else if let n = phase.nextWindow(after: now) {
+            let secs = Int(max(0, n.start.timeIntervalSince(now)))
+            let h = secs / 3600; let m = (secs % 3600) / 60; let s = secs % 60
+            let label = h > 0 ? "Starts in \(h)h \(m)m \(s)s"
+                               : m > 0 ? "Starts in \(m)m \(s)s"
+                               : "Starts in \(s)s"
+            Text(label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        } else if let w = displayWindow {
+            let secs = Int(max(0, now.timeIntervalSince(w.end)))
+            let h = secs / 3600; let m = (secs % 3600) / 60
+            let label = h > 0 ? "Ended \(h)h \(m)m ago" : "Ended \(m)m ago"
+            Text(label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.55))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         } else {
             Image(systemName: "checkmark")
                 .font(.system(size: 11, weight: .bold))

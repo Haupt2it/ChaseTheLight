@@ -7,11 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CC11AA000000000000000010 /* Chase the Light Watch.app in Embed Watch Content */ = {
-			isa = PBXBuildFile;
-			fileRef = CC11AA000000000000000001 /* Chase the Light Watch.app */;
-			settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); };
-		};
+		CC11AA000000000000000010 /* Chase the Light Watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = CC11AA000000000000000001 /* Chase the Light Watch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */

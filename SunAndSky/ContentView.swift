@@ -7,8 +7,9 @@ import MapKit
 
 struct ContentView: View {
 
-    @EnvironmentObject private var settings:   AppSettings
-    @EnvironmentObject private var proManager: ProManager
+    @EnvironmentObject private var settings:             AppSettings
+    @EnvironmentObject private var proManager:           ProManager
+    @EnvironmentObject private var notificationManager: NotificationManager
 
     @StateObject private var location         = LocationManager()
     @StateObject private var weatherService   = WeatherService()
@@ -214,13 +215,28 @@ struct ContentView: View {
             UpgradeSheet().environmentObject(proManager)
         }
         .sheet(isPresented: $showNotificationSettings) {
-            NotificationSettingsSheet().environmentObject(settings)
+            NotificationSettingsSheet()
+                .environmentObject(settings)
+                .environmentObject(notificationManager)
         }
         .onReceive(location.$coordinate) { coord in
             guard pinnedCoordinate == nil, let coord else { return }
             recalculate(coord: coord)
             let source = proManager.isPro ? settings.weatherSource : .openMeteo
             weatherService.start(latitude: coord.latitude, longitude: coord.longitude, source: source)
+            rescheduleNotifications()
+        }
+        // Reschedule when any alert setting changes
+        .onChange(of: settings.sunriseAlertEnabled)    { _, _ in rescheduleNotifications() }
+        .onChange(of: settings.sunriseLeadMinutes)     { _, _ in rescheduleNotifications() }
+        .onChange(of: settings.sunsetAlertEnabled)     { _, _ in rescheduleNotifications() }
+        .onChange(of: settings.sunsetLeadMinutes)      { _, _ in rescheduleNotifications() }
+        .onChange(of: settings.goldenHourAlertEnabled) { _, _ in rescheduleNotifications() }
+        .onChange(of: settings.blueHourAlertEnabled)   { _, _ in rescheduleNotifications() }
+        // Reschedule when app returns to foreground (covers daily refresh)
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIApplication.willEnterForegroundNotification)) { _ in
+            rescheduleNotifications()
         }
         .onChange(of: settings.weatherSource) { _, source in
             let active = proManager.isPro ? source : .openMeteo
@@ -313,6 +329,19 @@ struct ContentView: View {
     private func recalculate(coord: CLLocationCoordinate2D?) {
         guard let coord else { return }
         solar = SolarCalculator.solarInfo(for: now, latitude: coord.latitude, longitude: coord.longitude)
+    }
+
+    private func rescheduleNotifications() {
+        guard let coord = activeCoordinate, let solar else { return }
+        Task {
+            await notificationManager.refreshAuthStatus()
+            await notificationManager.schedule(
+                solar:      solar,
+                coordinate: coord,
+                settings:   settings,
+                weather:    weatherService.weather
+            )
+        }
     }
 }
 
