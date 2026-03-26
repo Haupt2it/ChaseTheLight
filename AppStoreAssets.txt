@@ -72,6 +72,14 @@ Know every light phase before you leave the house. Real-time sun tracking + live
 satellite imagery for photographers chasing perfect light.
 
 
+WHAT'S NEW (Version 1.1.1)
+---------------------------
+• Weather source now shown as a tappable pill in the Current Conditions card header — tap to switch between Open-Meteo, WeatherKit, and NWS
+• Light phase time bubble adds a fourth state: live second-by-second countdown ("Ends in 4m 32s", "Starts in 2h 14m 32s")
+• Improved spacing between Current Conditions and Live Satellite cards
+• iOS alert notifications with interactive actions (On My Way, Snooze 15 min, View Conditions)
+• All sheet presentations unified for reliability — Settings, Upgrade, and Notifications never conflict
+
 WHAT'S NEW (Version 1.1.0)
 ---------------------------
 • Apple Watch app — live sun tracking, light phase schedule, and haptic alerts on your wrist (Pro)

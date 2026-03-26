@@ -21,6 +21,9 @@ struct CurrentConditionsCard: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white)
                 Spacer()
+                // WEATHER SOURCE PILL — lives inside card header, NOT below card
+                // Moving below card caused ScrollView gesture conflicts that could not be resolved
+                // This position is permanent — do not move outside the card
                 Button { showSettings = true } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "cloud.fill")
