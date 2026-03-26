@@ -42,16 +42,16 @@ struct SunriseSunsetCard: View {
 
 struct AlertsRow: View {
     @EnvironmentObject private var proManager: ProManager
-    @Binding var showUpgrade:              Bool
-    @Binding var showNotificationSettings: Bool
+    var onUpgrade:       () -> Void
+    var onNotifications: () -> Void
     let solar:    SolarInfo
     let now:      Date
     let timeZone: TimeZone?
 
     var body: some View {
         Button {
-            if proManager.isPro { showNotificationSettings = true }
-            else                { showUpgrade = true }
+            if proManager.isPro { onNotifications() }
+            else                { onUpgrade() }
         } label: {
             if proManager.isPro {
                 ProAlertsCard(solar: solar, now: now)

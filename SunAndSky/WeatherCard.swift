@@ -3,15 +3,46 @@ import SwiftUI
 // MARK: - CurrentConditionsCard
 
 struct CurrentConditionsCard: View {
-    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var settings:   AppSettings
+    @EnvironmentObject private var proManager: ProManager
 
     let weather:  WeatherData
     let solar:    SolarInfo?
     let timeZone: TimeZone?
     let source:   WeatherSource
 
+    @State private var showSettings = false
+
     var body: some View {
         VStack(spacing: 0) {
+            // ── Card header: title + tappable source pill ─────────────
+            HStack {
+                Text("Current Conditions")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button { showSettings = true } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "cloud.fill")
+                            .font(.system(size: 11))
+                        Text(source.rawValue)
+                            .font(.system(size: 12, weight: .medium))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundColor(.white.opacity(0.60))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.white.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
+
+            Divider().overlay(.white.opacity(0.15)).padding(.horizontal, 14)
+
             // ── Current conditions row ────────────────────────────────
             HStack {
                 VStack(spacing: 5) {
@@ -72,6 +103,11 @@ struct CurrentConditionsCard: View {
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.2), lineWidth: 1))
+        .sheet(isPresented: $showSettings) {
+            SettingsSheet()
+                .environmentObject(settings)
+                .environmentObject(proManager)
+        }
     }
 
     private var forecastStrip: some View {
@@ -117,7 +153,12 @@ struct CurrentConditionsCard: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
             }
-            .onAppear { proxy.scrollTo(currentSlot, anchor: .center) }
+            .clipped()
+            .onAppear {
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) { proxy.scrollTo(currentSlot, anchor: .center) }
+            }
         }
     }
 

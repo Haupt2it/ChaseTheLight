@@ -3,6 +3,22 @@ import CoreLocation
 import Combine
 import MapKit
 
+// MARK: - ActiveSheet
+
+enum ActiveSheet: Identifiable {
+    case settings
+    case upgrade
+    case notifications
+
+    var id: String {
+        switch self {
+        case .settings:      return "settings"
+        case .upgrade:       return "upgrade"
+        case .notifications: return "notifications"
+        }
+    }
+}
+
 // MARK: - ContentView
 
 struct ContentView: View {
@@ -19,10 +35,7 @@ struct ContentView: View {
     @State private var isSearching   = false
     @State private var searchError:  String?
     @State private var isGeocoding   = false
-    @State private var showSettings              = false
-    @State private var settingsScrollToWeather   = false
-    @State private var showUpgrade               = false
-    @State private var showNotificationSettings  = false
+    @State private var activeSheet: ActiveSheet?
     @State private var showProToast              = false
 
     @State private var phaseDisplayModes: [String: Int] = [:]
@@ -72,7 +85,7 @@ struct ContentView: View {
                         onSearch:            geocodeSearch,
                         onClearPin:          clearPin,
                         onCancel:            { isSearching = false; searchError = nil },
-                        onOpenSettings:      { showSettings = true }
+                        onOpenSettings:      { activeSheet = .settings }
                     )
                     header
                         .padding(.top, 16)
@@ -89,11 +102,11 @@ struct ContentView: View {
 
                         // ── Alerts banner ─────────────────────────────
                         AlertsRow(
-                            showUpgrade:              $showUpgrade,
-                            showNotificationSettings: $showNotificationSettings,
-                            solar:                    solar,
-                            now:                      now,
-                            timeZone:                 activeTimeZone
+                            onUpgrade:       { activeSheet = .upgrade },
+                            onNotifications: { activeSheet = .notifications },
+                            solar:           solar,
+                            now:             now,
+                            timeZone:        activeTimeZone
                         )
                         .padding(.horizontal, 24)
                         .padding(.top, 12)
@@ -116,45 +129,16 @@ struct ContentView: View {
                         }
 
                         if let weather = weatherService.weather {
-                            Text("Current Conditions")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 24)
-                                .padding(.top, 16)
                             CurrentConditionsCard(
                                 weather:  weather,
                                 solar:    solar,
                                 timeZone: activeTimeZone,
                                 source:   weatherService.activeSource
                             )
-                            .padding(.top, 6)
+                            .clipped()
+                            .padding(.top, 16)
                             .padding(.horizontal, 24)
-
-                            Button(action: {
-                                print("WEATHER TAPPED")
-                                settingsScrollToWeather = true
-                                showSettings = true
-                            }) {
-                                HStack {
-                                    Spacer()
-                                    Image(systemName: "cloud.fill")
-                                        .foregroundColor(.white.opacity(0.5))
-                                    Text("Weather: \(settings.weatherSource.rawValue)")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(.white.opacity(0.5))
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.white.opacity(0.4))
-                                    Spacer()
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .padding(.horizontal, 16)
                         }
-
 
                         // ── Satellite card ─────────────────────────────
                         if settings.showSatelliteCard {
@@ -167,7 +151,7 @@ struct ContentView: View {
                                 placeName:   activePlaceName
                             )
                             .padding(.horizontal, 24)
-                            .padding(.top, 16)
+                            .padding(.top, 32)
                         }
 
                         Spacer().frame(height: 48)
@@ -205,19 +189,20 @@ struct ContentView: View {
         .onChange(of: settings.satelliteRegion) { _, region in
             satelliteService.start(imageURL: region.imageURL)
         }
-        .sheet(isPresented: $showSettings) {
-            SettingsSheet(scrollToWeather: settingsScrollToWeather)
-                .environmentObject(settings)
-                .environmentObject(proManager)
-                .onDisappear { settingsScrollToWeather = false }
-        }
-        .sheet(isPresented: $showUpgrade) {
-            UpgradeSheet().environmentObject(proManager)
-        }
-        .sheet(isPresented: $showNotificationSettings) {
-            NotificationSettingsSheet()
-                .environmentObject(settings)
-                .environmentObject(notificationManager)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .settings:
+                SettingsSheet()
+                    .environmentObject(settings)
+                    .environmentObject(proManager)
+            case .upgrade:
+                UpgradeSheet()
+                    .environmentObject(proManager)
+            case .notifications:
+                NotificationSettingsSheet()
+                    .environmentObject(settings)
+                    .environmentObject(notificationManager)
+            }
         }
         .onReceive(location.$coordinate) { coord in
             guard pinnedCoordinate == nil, let coord else { return }
@@ -366,6 +351,7 @@ extension Color {
                   blue:  Double( hex        & 0xFF) / 255)
     }
 }
+
 
 
 #Preview { ContentView().environmentObject(AppSettings()).environmentObject(ProManager()) }
