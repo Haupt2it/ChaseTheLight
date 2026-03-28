@@ -4,6 +4,13 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 
+# Build artifacts and archives
+SunAndSky */
+*.xcarchive
+*.ipa
+*.dSYM
+ExportOptions.plist
+
 # Swift Package Manager
 .build/
 .swiftpm/
