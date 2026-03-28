@@ -77,6 +77,8 @@ private struct PressScaleStyle: ButtonStyle {
 // MARK: - FreeAlertsCard
 
 private struct FreeAlertsCard: View {
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
     @State private var bellPulse = false
 
     var body: some View {
@@ -96,12 +98,12 @@ private struct FreeAlertsCard: View {
                             .fixedSize()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Chase the Light")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: isPhone ? 18 : 16, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.88))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
                             Text("Alerts")
-                                .font(.system(size: 27, weight: .black))
+                                .font(.system(size: isPhone ? 29 : 27, weight: .black))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
                                 .foregroundStyle(
@@ -129,12 +131,12 @@ private struct FreeAlertsCard: View {
                             VStack(alignment: .leading, spacing: 5) {
                                 Spacer(minLength: 0)
                                 Text("Never miss golden hour")
-                                    .font(.system(size: 15, weight: .bold))
+                                    .font(.system(size: isPhone ? 17 : 15, weight: .bold))
                                     .foregroundStyle(.white)
                                     .lineLimit(2)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Text("Set your departure reminder")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: isPhone ? 14 : 12, weight: .medium))
                                     .foregroundStyle(.white.opacity(0.88))
                                     .lineLimit(1)
                                 Spacer(minLength: 0)
@@ -160,7 +162,7 @@ private struct FreeAlertsCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
-        .frame(height: 96)
+        .frame(height: isPhone ? 115 : 96)
         .shadow(color: Color(hex: 0xFF6600).opacity(0.50), radius: 18, x: 0, y: 7)
         .onAppear {
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
@@ -174,6 +176,8 @@ private struct FreeAlertsCard: View {
 
 private struct ProAlertsCard: View {
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
 
     let solar: SolarInfo
     let now:   Date
@@ -273,12 +277,12 @@ private struct ProAlertsCard: View {
                             .fixedSize()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Chase the Light")
-                                .font(.system(size: 18, weight: .medium))
+                                .font(.system(size: isPhone ? 20 : 18, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.80))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
                             Text("Alerts")
-                                .font(.system(size: 21, weight: .black))
+                                .font(.system(size: isPhone ? 23 : 21, weight: .black))
                                 .minimumScaleFactor(0.7)
                                 .lineLimit(1)
                                 .foregroundStyle(
@@ -309,7 +313,7 @@ private struct ProAlertsCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 20))
         }
-        .frame(height: 96)
+        .frame(height: isPhone ? 115 : 96)
         .overlay(
             RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color(hex: 0x5544CC).opacity(0.55), lineWidth: 1)
@@ -342,20 +346,20 @@ private struct ProAlertsCard: View {
                                 .font(.system(size: 20))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(alert.name)
-                                    .font(.system(size: 16, weight: .bold))
+                                    .font(.system(size: isPhone ? 18 : 16, weight: .bold))
                                     .foregroundStyle(.white)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.50)
                                 if let lead = alert.leadMinutes {
                                     Text("Alert: \(lead) min before")
-                                        .font(.system(size: 13))
+                                        .font(.system(size: isPhone ? 15 : 13))
                                         .foregroundStyle(.white.opacity(0.70))
                                         .lineLimit(1)
                                         .minimumScaleFactor(0.50)
                                 }
                                 if let cd = alert.triggerDate.flatMap({ countdown(to: $0, isTomorrow: alert.isTomorrow) }) {
                                     Text(cd)
-                                        .font(.system(size: 15, weight: .semibold))
+                                        .font(.system(size: isPhone ? 17 : 15, weight: .semibold))
                                         .foregroundStyle(.white.opacity(0.78))
                                 }
                             }
@@ -383,6 +387,8 @@ private struct SunHeroCard: View {
     let isSunrise: Bool
     let state:     CardState
 
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
     @State private var glowPulse = false
 
     private var glowColor: Color {
@@ -400,8 +406,8 @@ private struct SunHeroCard: View {
                 Spacer(minLength: 4)
                 badgeView
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .padding(.horizontal, isPhone ? 12 : 16)
+            .padding(.top, isPhone ? 12 : 16)
 
             // ── Line 2: Large time ────────────────────────────────────
             Text(time)
@@ -409,7 +415,7 @@ private struct SunHeroCard: View {
                 .foregroundStyle(.white.opacity(state == .done ? 0.38 : 1.0))
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, isPhone ? 12 : 16)
                 .padding(.top, 5)
 
             // ── Line 3: Icon · condition · cloud% ────────────────────
@@ -427,7 +433,7 @@ private struct SunHeroCard: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white.opacity(state == .done ? 0.26 : 0.58))
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, isPhone ? 12 : 16)
                 .padding(.top, 8)
             }
 
@@ -442,7 +448,7 @@ private struct SunHeroCard: View {
                         .foregroundStyle(qualityColor(snap.lightQuality)
                             .opacity(state == .done ? 0.38 : 0.92))
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, isPhone ? 12 : 16)
                 .padding(.top, 8)
             }
 

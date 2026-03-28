@@ -27,6 +27,9 @@ struct ContentView: View {
     @EnvironmentObject private var proManager:           ProManager
     @EnvironmentObject private var notificationManager: NotificationManager
 
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
+
     @StateObject private var location         = LocationManager()
     @StateObject private var weatherService   = WeatherService()
     @StateObject private var satelliteService = SatelliteService()
@@ -88,7 +91,7 @@ struct ContentView: View {
                         onOpenSettings:      { activeSheet = .settings }
                     )
                     header
-                        .padding(.top, 16)
+                        .padding(.top, isPhone ? 8 : 16)
                         .padding(.horizontal, 24)
 
                     if let solar {
@@ -98,7 +101,7 @@ struct ContentView: View {
                             now:      now,
                             timeZone: activeTimeZone
                         )
-                        .padding(.top, 20)
+                        .padding(.top, isPhone ? 12 : 20)
 
                         // ── Alerts banner ─────────────────────────────
                         AlertsRow(
@@ -108,8 +111,8 @@ struct ContentView: View {
                             now:             now,
                             timeZone:        activeTimeZone
                         )
-                        .padding(.horizontal, 24)
-                        .padding(.top, 12)
+                        .padding(.horizontal, isPhone ? 16 : 24)
+                        .padding(.top, isPhone ? 4 : 12)
 
                         if let coord = activeCoordinate {
                             LightPhaseTimelineView(
@@ -124,8 +127,8 @@ struct ContentView: View {
                                 currentAltitude:  solar.altitude,
                                 phaseDisplayModes: $phaseDisplayModes
                             )
-                            .padding(.top, 16)
-                            .padding(.horizontal, 24)
+                            .padding(.top, isPhone ? 8 : 16)
+                            .padding(.horizontal, isPhone ? 16 : 24)
                         }
 
                         if let weather = weatherService.weather {
@@ -136,8 +139,8 @@ struct ContentView: View {
                                 source:   weatherService.activeSource
                             )
                             .clipped()
-                            .padding(.top, 16)
-                            .padding(.horizontal, 24)
+                            .padding(.top, isPhone ? 8 : 16)
+                            .padding(.horizontal, isPhone ? 16 : 24)
                         }
 
                         // ── Satellite card ─────────────────────────────

@@ -222,6 +222,8 @@ struct LightPhaseTimelineView: View {
 
 private struct PhaseGridCell: View {
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
 
     let phase:               LightPhase
     let now:                 Date
@@ -262,7 +264,7 @@ private struct PhaseGridCell: View {
                 // Phase name + status badge
                 HStack(alignment: .center, spacing: 4) {
                     Text(phase.name)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: isPhone ? 16 : 20, weight: .bold))
                         .foregroundStyle(.white.opacity(isDone ? 0.32 : 1.0))
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
@@ -298,9 +300,9 @@ private struct PhaseGridCell: View {
                     .padding(.top, 2)
                     .shadow(color: .black.opacity(0.55), radius: 2, x: 0, y: 1)
             }
-            .padding(.leading, 14)
-            .padding(.trailing, 14)
-            .padding(.vertical, 18)
+            .padding(.leading, isPhone ? 10 : 14)
+            .padding(.trailing, isPhone ? 10 : 14)
+            .padding(.vertical, isPhone ? 12 : 18)
         }
         // Per-phase solid color — sky gradient peeks through at set opacity
         .background {
@@ -342,7 +344,7 @@ private struct PhaseGridCell: View {
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.38))
             }
-            .padding(.horizontal, 12).padding(.vertical, 6)
+            .padding(.horizontal, isPhone ? 9 : 12).padding(.vertical, isPhone ? 4 : 6)
             .background(
                 (isActive && displayMode == 0) ? Color.white.opacity(0.25) : Color.white.opacity(0.18),
                 in: Capsule()
@@ -367,19 +369,19 @@ private struct PhaseGridCell: View {
         } else if displayMode == 2, let w = displayWindow {
             let dur = Int(w.end.timeIntervalSince(w.start) / 60)
             Text("\(dur) min")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: isPhone ? 17 : 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
         } else if displayMode == 3 {
             countdownLabel
         } else if isActive {
             Text("NOW")
-                .font(.system(size: 24, weight: .black, design: .rounded))
+                .font(.system(size: isPhone ? 19 : 24, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
         } else if let n = phase.nextWindow(after: now) {
             let secs = max(0, n.start.timeIntervalSince(now))
             let h = Int(secs) / 3600; let m = (Int(secs) % 3600) / 60
             Text(h > 0 ? "\(h)h \(m)m" : "\(m)m")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(size: isPhone ? 19 : 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
         } else {
             Image(systemName: "checkmark")

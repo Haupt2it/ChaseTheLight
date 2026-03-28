@@ -5,6 +5,8 @@ import CoreLocation
 
 struct SunArcHeroView: View {
     @EnvironmentObject private var settings: AppSettings
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    private var isPhone: Bool { hSizeClass == .compact }
 
     let solar:      SolarInfo?
     let cloudCover: Double
@@ -53,17 +55,17 @@ struct SunArcHeroView: View {
             // Horizon at 68% = 204pt; ZStack centre = 150pt.
             // offset -15 → VStack centre at 135pt; bottom edge ≈ 175pt,
             // leaving ~29pt of breathing room before the horizon at 204pt.
-            VStack(spacing: 2) {
+            VStack(spacing: isPhone ? 0 : 2) {
                 Text("Chase the Light")
-                    .font(.system(size: 62, weight: .ultraLight, design: .default))
-                    .tracking(62 * 0.15)
+                    .font(.system(size: isPhone ? 43 : 62, weight: .ultraLight, design: .default))
+                    .tracking((isPhone ? 43.0 : 62.0) * 0.15)
                     .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))   // #FFF8E1
                     .shadow(color: .black.opacity(0.55), radius: 6, x: 0, y: 2)
                     .multilineTextAlignment(.center)
 
                 Text("Sun, sky, and the perfect moment \u{2014} all in one place.")
-                    .font(.system(size: 18, weight: .regular, design: .serif).italic())
-                    .tracking(18 * 0.05)
+                    .font(.system(size: isPhone ? 14 : 18, weight: .regular, design: .serif).italic())
+                    .tracking((isPhone ? 14.0 : 18.0) * 0.05)
                     .foregroundStyle(Color(red: 1.0, green: 0.878, blue: 0.698))   // #FFE0B2
                     .shadow(color: .black.opacity(0.50), radius: 4, x: 0, y: 1)
                     .multilineTextAlignment(.center)
@@ -78,10 +80,10 @@ struct SunArcHeroView: View {
             groundContent
                 .frame(maxWidth: .infinity)
                 .frame(height: 96)
-                .offset(y: 102)
+                .offset(y: isPhone ? 82 : 102)
                 .animation(.spring(duration: 0.3), value: isSearching)
         }
-        .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300)
+        .frame(maxWidth: .infinity, minHeight: isPhone ? 260 : 300, maxHeight: isPhone ? 260 : 300)
         .clipped()
     }
 
@@ -97,7 +99,7 @@ struct SunArcHeroView: View {
                 // ── Location name ─────────────────────────────────────
                 if !placeName.isEmpty {
                     Text(placeName)
-                        .font(.system(size: 22, weight: .bold))
+                        .font(.system(size: isPhone ? 18 : 22, weight: .bold))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.65), radius: 4, x: 0, y: 2)
                         .lineLimit(1)
@@ -124,12 +126,12 @@ struct SunArcHeroView: View {
                                 .font(.system(size: 17))
                                 .foregroundStyle(.white.opacity(0.55))
                             Text("Search city or place…")
-                                .font(.system(size: 18))
+                                .font(.system(size: isPhone ? 16 : 18))
                                 .foregroundStyle(.white.opacity(0.42))
                             Spacer()
                         }
                         .padding(.horizontal, 14)
-                        .padding(.vertical, 13)
+                        .padding(.vertical, isPhone ? 9 : 13)
                         .frame(maxWidth: .infinity)
                         .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
                     }
@@ -161,7 +163,7 @@ struct SunArcHeroView: View {
                     .foregroundStyle(.white.opacity(0.7))
                     .symbolEffect(.rotate, isActive: isGeocoding)
                 TextField("Search city or place…", text: $searchText)
-                    .font(.system(size: 18))
+                    .font(.system(size: isPhone ? 16 : 18))
                     .foregroundStyle(.white).tint(.white)
                     .submitLabel(.search).onSubmit { onSearch() }
                     .autocorrectionDisabled()
@@ -176,7 +178,7 @@ struct SunArcHeroView: View {
                     .foregroundStyle(.white)
                     .font(.system(size: 17))
             }
-            .padding(.horizontal, 16).padding(.vertical, 13)
+            .padding(.horizontal, 16).padding(.vertical, isPhone ? 9 : 13)
             .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal, 16)
 
