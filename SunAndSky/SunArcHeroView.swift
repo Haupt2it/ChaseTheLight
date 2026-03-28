@@ -95,7 +95,7 @@ struct SunArcHeroView: View {
             searchBarInGround
                 .transition(.opacity)
         } else {
-            VStack(spacing: 9) {
+            VStack(spacing: isPhone ? 4 : 9) {
                 // ── Location name ─────────────────────────────────────
                 if !placeName.isEmpty {
                     Text(placeName)
