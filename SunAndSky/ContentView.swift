@@ -41,7 +41,8 @@ struct ContentView: View {
     @State private var activeSheet: ActiveSheet?
     @State private var showProToast              = false
 
-    @State private var phaseDisplayModes: [String: Int] = [:]
+    @State private var phaseDisplayModes:    [String: Int] = [:]
+    @State private var sunriseSunsetModes:  [String: Int] = [:]
 
     @State private var pinnedCoordinate: CLLocationCoordinate2D?
     @State private var pinnedPlaceName:  String = ""
@@ -96,10 +97,11 @@ struct ContentView: View {
 
                     if let solar {
                         SunriseSunsetCard(
-                            solar:    solar,
-                            weather:  weatherService.weather,
-                            now:      now,
-                            timeZone: activeTimeZone
+                            solar:        solar,
+                            weather:      weatherService.weather,
+                            now:          now,
+                            timeZone:     activeTimeZone,
+                            displayModes: $sunriseSunsetModes
                         )
                         .padding(.top, isPhone ? 12 : 20)
 

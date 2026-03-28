@@ -6,7 +6,9 @@ import CoreLocation
 struct SunArcHeroView: View {
     @EnvironmentObject private var settings: AppSettings
     @Environment(\.horizontalSizeClass) private var hSizeClass
-    private var isPhone: Bool { hSizeClass == .compact }
+    @Environment(\.verticalSizeClass)   private var vSizeClass
+    private var isPhone: Bool         { hSizeClass == .compact }
+    private var isPhonePortrait: Bool { hSizeClass == .compact && vSizeClass == .regular }
 
     let solar:      SolarInfo?
     let cloudCover: Double
@@ -51,28 +53,58 @@ struct SunArcHeroView: View {
             }
             .allowsHitTesting(false)
 
-            // ── Title + tagline just above the horizon (non-interactive) ─
-            // Horizon at 68% = 204pt; ZStack centre = 150pt.
-            // offset -15 → VStack centre at 135pt; bottom edge ≈ 175pt,
-            // leaving ~29pt of breathing room before the horizon at 204pt.
-            VStack(spacing: isPhone ? 0 : 2) {
+            // ── Title + tagline (non-interactive) ─────────────────────
+            // iPhone portrait: title floats to the top of the hero;
+            // tagline stays in its original centred position.
+            // All other devices/orientations: both in a single VStack
+            // offset -15pt above centre (same as before).
+            if isPhonePortrait {
+                // Title pinned to top of hero
                 Text("Chase the Light")
-                    .font(.system(size: isPhone ? 43 : 62, weight: .ultraLight, design: .default))
-                    .tracking((isPhone ? 43.0 : 62.0) * 0.15)
-                    .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))   // #FFF8E1
+                    .font(.system(size: 43, weight: .ultraLight, design: .default))
+                    .tracking(43.0 * 0.15)
+                    .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))
                     .shadow(color: .black.opacity(0.55), radius: 6, x: 0, y: 2)
                     .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(.top, 16)
+                    .allowsHitTesting(false)
 
-                Text("Sun, sky, and the perfect moment \u{2014} all in one place.")
-                    .font(.system(size: isPhone ? 14 : 18, weight: .regular, design: .serif).italic())
-                    .tracking((isPhone ? 14.0 : 18.0) * 0.05)
-                    .foregroundStyle(Color(red: 1.0, green: 0.878, blue: 0.698))   // #FFE0B2
-                    .shadow(color: .black.opacity(0.50), radius: 4, x: 0, y: 1)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                // Tagline — pushed lower than the centred default to sit
+                // further below the top-pinned title on iPhone portrait.
+                VStack(spacing: 2) {
+                    Text("Sun, sky, and the perfect moment.")
+                    Text("All in one place.")
+                }
+                .font(.system(size: 14, weight: .regular, design: .serif).italic())
+                .tracking(14.0 * 0.05)
+                .foregroundStyle(Color(red: 1.0, green: 0.878, blue: 0.698))
+                .shadow(color: .black.opacity(0.50), radius: 4, x: 0, y: 1)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+                .offset(y: 10)
+                .allowsHitTesting(false)
+            } else {
+                // iPad / landscape iPhone: title + tagline together, centred
+                VStack(spacing: isPhone ? 0 : 2) {
+                    Text("Chase the Light")
+                        .font(.system(size: isPhone ? 43 : 62, weight: .ultraLight, design: .default))
+                        .tracking((isPhone ? 43.0 : 62.0) * 0.15)
+                        .foregroundStyle(Color(red: 1.0, green: 0.973, blue: 0.882))
+                        .shadow(color: .black.opacity(0.55), radius: 6, x: 0, y: 2)
+                        .multilineTextAlignment(.center)
+
+                    Text("Sun, sky, and the perfect moment \u{2014} all in one place.")
+                        .font(.system(size: isPhone ? 14 : 18, weight: .regular, design: .serif).italic())
+                        .tracking((isPhone ? 14.0 : 18.0) * 0.05)
+                        .foregroundStyle(Color(red: 1.0, green: 0.878, blue: 0.698))
+                        .shadow(color: .black.opacity(0.50), radius: 4, x: 0, y: 1)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                }
+                .offset(y: -15)
+                .allowsHitTesting(false)
             }
-            .offset(y: -15)
-            .allowsHitTesting(false)
 
             // ── Interactive ground zone ────────────────────────────────
             // Horizon at 68% = 204pt; ZStack centre = 150pt.
@@ -149,7 +181,7 @@ struct SunArcHeroView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .padding(.top, 8)
+            .padding(.top, isPhone ? 20 : 8)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .transition(.opacity)
         }

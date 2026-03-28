@@ -258,7 +258,7 @@ final class NotificationManager: NSObject, ObservableObject {
               WCSession.default.activationState == .activated,
               WCSession.default.isWatchAppInstalled,
               !times.isEmpty else { return }
-        var ctx = (try? WCSession.default.applicationContext) ?? [:]
+        var ctx = WCSession.default.applicationContext
         times.forEach { ctx[$0] = $1 }
         try? WCSession.default.updateApplicationContext(ctx)
     }
